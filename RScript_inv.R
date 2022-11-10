@@ -51,12 +51,19 @@ m = lm(invdat$logantal~invdat$Behandling)
 anova(m)
 summary(m)
 
-
-
-m1 = lm(invdat$Medel.diameter~invdat$Behandling-1)
+m1 = lm(invdat$logantal~invdat$Behandling-1)
 summary(m1)
 
+qqnorm(invdat$Area)
+invdat$logarea <- log(invdat$Area)
+qqnorm(invdat$logarea)
 
+m = lm(invdat$logarea~invdat$Behandling)
+anova(m)
+summary(m)
+
+m1 = lm(invdat$logarea~invdat$Behandling-1)
+summary(m1)
 
 
 
