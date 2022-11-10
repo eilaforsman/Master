@@ -27,3 +27,25 @@ invdat$Medelantal <- as.numeric(invdat$Medelantal)
 
 m = lm(invdat$Höjd~invdat$Behandling)
 anova(m)
+
+summary(m)
+qqnorm(invdat$Höjd)
+
+m1 = lm(invdat$Höjd~invdat$Behandling-1)
+summary(m1)
+
+m = lm(invdat$Medel.diameter~invdat$Behandling)
+anova(m)
+summary(m)
+
+qqnorm(invdat$Medel.diameter)
+
+m1 = lm(invdat$Medel.diameter~invdat$Behandling-1)
+summary(m1)
+
+
+
+
+
+
+
