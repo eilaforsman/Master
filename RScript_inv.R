@@ -43,7 +43,18 @@ qqnorm(invdat$Medel.diameter)
 m1 = lm(invdat$Medel.diameter~invdat$Behandling-1)
 summary(m1)
 
+qqnorm(invdat$Medelantal)
+invdat$logantal <- log(invdat$Medelantal)
+qqnorm(invdat$logantal)
 
+m = lm(invdat$logantal~invdat$Behandling)
+anova(m)
+summary(m)
+
+
+
+m1 = lm(invdat$Medel.diameter~invdat$Behandling-1)
+summary(m1)
 
 
 
