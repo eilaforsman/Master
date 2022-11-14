@@ -47,7 +47,7 @@ qqnorm(invdat$Medelantal)
 invdat$logantal <- log(invdat$Medelantal)
 qqnorm(invdat$logantal)
 
-m = lm(invdat$logantal~invdat$Behandling)
+m = lm(invdat$logantal~invdat$Behandling) #Ändra ordning så kontroll är intercept
 anova(m)
 summary(m)
 
@@ -58,7 +58,7 @@ qqnorm(invdat$Area)
 invdat$logarea <- log(invdat$Area)
 qqnorm(invdat$logarea)
 
-m = lm(invdat$logarea~invdat$Behandling)
+m = lm(invdat$logarea~invdat$Behandling) #Ändra ordning så kontroll är intercept
 anova(m)
 summary(m)
 
