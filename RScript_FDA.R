@@ -12,7 +12,7 @@ list.files ()
 #Basic####
 getwd()
 
-setwd("~/Documents/Documents/R/Master")
+setwd("~/Documents/Documents/R/Master/Master")
 
 dataFDA <- read.csv("dataFDA.csv", sep = ';')
 head(dataFDA)
@@ -23,6 +23,7 @@ table(dataFDA$Lokal)
 summary(dataFDA)
 boxplot(Antal~Lokal,data=dataFDA) #Testar boxplot
 
+library(plyr)
 
 mean_LokalFDA<-ddply(dataFDA,"Lokal",summarise,
                   mean_antal=mean(Antal))
@@ -42,8 +43,8 @@ library(stringr)
 ID_split <- as.data.frame(str_split_fixed(dataFDA$ID, "_", 2))
 head(ID_split)
 
-nchar(dataFDA$Prov)
-dataFDA$newprov <- substr(dataFDA$Prov, 1, nchar(dataFDA$Prov) - 2)
+
+
 
 dataFDA$ID_spec <- ID_split$V1
 paste(dataFDA$Lokal, dataFDA$ID_spec, sep ="_")
@@ -53,7 +54,9 @@ head(dataFDA)
 Prov<-ddply(dataFDA, "Prov", summarise, mean_antal=mean(Antal))
 head(Prov)
 
-Meantot<-ddply(Prov, "newprov", summarise, mean_tot=mean(mean_antal))
+nchar(dataFDA$Prov)
+dataFDA$newprov <- substr(dataFDA$Prov, 1, nchar(dataFDA$Prov) - 2)
+Meantot<-ddply(dataFDA, "newprov", summarise, mean_tot=mean(Antal))
 
 #Plotting####
 
@@ -74,13 +77,13 @@ text(x = 1:length(levels(mean_LokalFDA$Lokal)),
 #install.packages("ggplot2")
 library(ggplot2)
 
-head(MeanProv)
+head(Meantot)
 
 ?ggplot()
 
-FDAMeans<-ddply(dataFDA,"Lokal",summarize,N=length(Antal),
-                         mean.antal=mean(Antal)
-                         ,sd.FDA=sd(mean.antal),
+FDAMeans<-ddply(dataFDA,"Lokal", summarize, N=length(Antal),
+                         mean.antal=mean(Antal),
+                        sd.FDA=sd(mean.antal),
                          se.FDA=sd.FDA/sqrt(N))
 
 ggplot(Meantot, aes(x= reorder(newprov, -mean_tot), y=mean_tot)) +
@@ -91,9 +94,10 @@ ggplot(Meantot, aes(x= reorder(newprov, -mean_tot), y=mean_tot)) +
         #scale_fill_manual(values=c("#73ba2e", "#034c77")) +
         #scale_color_manual(values=c("#000000", "#000000")) +
         scale_y_continuous(limits = c(0,150), expand = c(0,0)) +
-        labs(y="Antal per prov", x="", title = "") +
-        theme(legend.position = c(0.9,0.9), legend.title = element_blank(),
-              plot.title = element_text(hjust = -0.15),
+        labs(y="Medelantal per prov", x="", title = "") +
+        theme(legend.position = c(0.9,0.9), 
+              legend.title = element_blank(),
+              plot.title = element_text (hjust = -0.15),
               text = element_text(size=20, family= "Times"),
               axis.text.x = element_text(size = 12, angle = 45,
                                          hjust = 1, color = "grey1")) +
@@ -119,18 +123,15 @@ mean_LokalVH<-ddply(dataVH,"Lokal",summarise,mean_kommitupp=mean(Kommit.upp))
 barplot(mean_kommitupp~Lokal, data=mean_LokalVH)
 
 
-#VH_andel_död####
+#Two-way ANOVA#####
 
+array(c("HW, HW, HW, kontroll, HW, HW, HW, HW, HW, HW, kontroll,
+                       HW, HW, HW, kontroll"), dim=c(15,1))
+Behandling = c("HW, HW, HW, kontroll, HW, HW, HW, HW, HW, HW, kontroll,
+                       HW, HW, HW, kontroll")
 
-dataAndel<- read.csv("Andel_VH.csv" , sep= ';')
-
-head(dataAndel)
-str(dataAndel)
-dataAndel$Plats<- as.factor(dataAndel$Plats)
-table(dataAndel$Plats)
-dataAndel$Procent.död<-as.numeric(data$Procent.död)
-mean_LokalAndel<-ddply(dataAndel,"Plats",summarise,mean_död=mean(Procent.död))
-barplot(mean_kommitupp~Lokal, data=mean_LokalVH)
+Behandling <- as.data.frame(Behandling)
+Meantot$Behandling = paste(Behandling)
 
 
 
