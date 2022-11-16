@@ -62,7 +62,7 @@ Meantot<-ddply(dataFDA, "newprov", summarise, mean_tot=mean(Antal))
 
 library(plyr)
 barplot(mean_antal~Lokal,data=mean_LokalFDA,srt=35)
-str(mean_Antal)
+str(mean_antal)
 axis(side=1,labels = FALSE)
 
 barplot(mean_antal~Lokal,data=mean_LokalFDA, xaxt="n")
@@ -106,33 +106,11 @@ ggplot(Meantot, aes(x= reorder(newprov, -mean_tot), y=mean_tot)) +
 
 
 
+#ANOVA#####
 
+dataFDA$Behandling = factor(dataFDA$Behandling, levels=c("Kontroll", "Heatweed"))
+m = lm(dataFDA$Antal~dataFDA$Behandling)
+anova(m)
+summary(m)
 
-
-
-
-#Växthus####
-
-dataVH <- read.csv("Växthus_data.csv", sep = ';')
-
-head(dataVH)
-str(dataVH)
-dataVH$Lokal<- as.factor(dataVH$Lokal)
-table(dataVH$Lokal)
-mean_LokalVH<-ddply(dataVH,"Lokal",summarise,mean_kommitupp=mean(Kommit.upp))
-barplot(mean_kommitupp~Lokal, data=mean_LokalVH)
-
-
-#Two-way ANOVA#####
-
-array(c("HW, HW, HW, kontroll, HW, HW, HW, HW, HW, HW, kontroll,
-                       HW, HW, HW, kontroll"), dim=c(15,1))
-Behandling = c("HW, HW, HW, kontroll, HW, HW, HW, HW, HW, HW, kontroll,
-                       HW, HW, HW, kontroll")
-
-Behandling <- as.data.frame(Behandling)
-Meantot$Behandling = paste(Behandling)
-
-
-
-
+hist(dataFDA$Antal)
