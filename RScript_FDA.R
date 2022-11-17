@@ -58,6 +58,7 @@ head(Prov)
 nchar(dataFDA_sub$Prov)
 dataFDA_sub$newprov <- substr(dataFDA_sub$Prov, 1, nchar(dataFDA_sub$Prov) - 2)
 Meantot<-ddply(dataFDA_sub, "newprov", summarise, mean_tot=mean(Antal))
+Meantot$order <- c(4,5,1,6,7,8,9,10,11,2,12,13,14,3)
 
 #Basic Plotting####
 
@@ -75,6 +76,8 @@ text(x = 1:length(levels(mean_LokalFDA$Lokal)),
      srt = 50,
      cex = 1.0)
 
+#Fancy plotting######
+
 #install.packages("ggplot2")
 library(ggplot2)
 
@@ -89,7 +92,7 @@ FDAMeans<-ddply(dataFDA_sub,"Lokal", summarize, N=length(Antal),
                         sd.FDA=sd(na.omit(Antal)),
                          se.FDA=sd.FDA/sqrt(N))
 
-ggplot(Meantot, aes(x= reorder(Meantot$newprov, -Meantot$mean_tot), y=Meantot$mean_tot)) +
+ggplot(Meantot, aes(x=reorder(Meantot$newprov, Meantot$order), y=Meantot$mean_tot)) +
         geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
         geom_errorbar(data=FDAMeans, aes(ymin= mean.antal - se.FDA, ymax=mean.antal + se.FDA),
                    width = 0.13, alpha = 1, position=position_dodge(0.75)) +
@@ -100,12 +103,15 @@ ggplot(Meantot, aes(x= reorder(Meantot$newprov, -Meantot$mean_tot), y=Meantot$me
         labs(y="Medelantal per prov", x="", title = "Levande celler per tvärsnitt från varje lokal") +
         theme(legend.position = c(0.9,0.9), 
               legend.title = element_blank(),
-              plot.title = element_text (hjust = -0.15),
-              text = element_text(size=20, family= "Times"),
-              axis.text.x = element_text(size = 12, angle = 45,
+              plot.title = element_text (hjust = 0.5),
+              text = element_text(size=28, family= "Times"),
+              axis.text.x = element_text(size = 20, angle = 60,
                                          hjust = 1, color = "grey1")) +
         theme(axis.ticks.length=unit(.25, "cm"))
 
+ggsave("Celler_FDA_plot", plot = last_plot(), device = "png",
+       scale = 1, width = 12, height = 8,
+       dpi = 600)
 
 
 
