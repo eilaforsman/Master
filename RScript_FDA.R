@@ -58,7 +58,7 @@ head(Prov)
 nchar(dataFDA_sub$Prov)
 dataFDA_sub$newprov <- substr(dataFDA_sub$Prov, 1, nchar(dataFDA_sub$Prov) - 2)
 Meantot<-ddply(dataFDA_sub, "newprov", summarise, mean_tot=mean(Antal))
-Meantot$order <- c(4,5,1,6,7,8,9,10,11,2,12,13,14,3)
+Meantot$order <- c(4,5,1,9,10,11,12,13,14,2,8,6,7,3)
 
 #Basic Plotting####
 
