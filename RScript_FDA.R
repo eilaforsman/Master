@@ -24,41 +24,42 @@ summary(dataFDA)
 boxplot(Antal~Lokal,data=dataFDA) #Testar boxplot
 
 library(plyr)
-
-mean_LokalFDA<-ddply(dataFDA,"Lokal",summarise,
+dataFDA_sub <- subset(dataFDA, Lokal != "H_Pålsjö_efter_HW")
+mean_LokalFDA<-ddply(dataFDA_sub,"Lokal",summarise,
                   mean_antal=mean(Antal))
 
-mean_ID_FDA<-ddply(dataFDA,"ID",summarise,
+mean_ID_FDA<-ddply(dataFDA_sub,"ID",summarise,
                      mean_antal=mean(Antal))
 head(mean_ID_FDA)
 
 
-head(dataFDA)
+head(dataFDA_sub)
 
 #install.packages("stringr")
 library(stringr)
 
 #Sort_data####
 
-ID_split <- as.data.frame(str_split_fixed(dataFDA$ID, "_", 2))
+ID_split <- as.data.frame(str_split_fixed(dataFDA_sub$ID, "_", 2))
 head(ID_split)
 
 
 
 
-dataFDA$ID_spec <- ID_split$V1
-paste(dataFDA$Lokal, dataFDA$ID_spec, sep ="_")
-dataFDA$Prov<-paste(dataFDA$Lokal, dataFDA$ID_spec, sep ="_")
-head(dataFDA)
+dataFDA_sub$ID_spec <- ID_split$V1
+paste(dataFDA_sub$Lokal, dataFDA_sub$ID_spec, sep ="_")
+dataFDA_sub$Prov<-paste(dataFDA_sub$Lokal, dataFDA_sub$ID_spec, sep ="_")
+head(dataFDA_sub)
 
-Prov<-ddply(dataFDA, "Prov", summarise, mean_antal=mean(Antal))
+
+Prov<-ddply(dataFDA_sub, "Prov", summarise, mean_antal=mean(Antal))
 head(Prov)
 
-nchar(dataFDA$Prov)
-dataFDA$newprov <- substr(dataFDA$Prov, 1, nchar(dataFDA$Prov) - 2)
-Meantot<-ddply(dataFDA, "newprov", summarise, mean_tot=mean(Antal))
+nchar(dataFDA_sub$Prov)
+dataFDA_sub$newprov <- substr(dataFDA_sub$Prov, 1, nchar(dataFDA_sub$Prov) - 2)
+Meantot<-ddply(dataFDA_sub, "newprov", summarise, mean_tot=mean(Antal))
 
-#Plotting####
+#Basic Plotting####
 
 library(plyr)
 barplot(mean_antal~Lokal,data=mean_LokalFDA,srt=35)
@@ -81,20 +82,22 @@ head(Meantot)
 
 ?ggplot()
 
-FDAMeans<-ddply(dataFDA,"Lokal", summarize, N=length(Antal),
-                         mean.antal=mean(Antal),
-                        sd.FDA=sd(mean.antal),
+
+
+FDAMeans<-ddply(dataFDA_sub,"Lokal", summarize, N=length(Antal),
+                         mean.antal=mean(na.omit(Antal)),
+                        sd.FDA=sd(na.omit(Antal)),
                          se.FDA=sd.FDA/sqrt(N))
 
-ggplot(Meantot, aes(x= reorder(newprov, -mean_tot), y=mean_tot)) +
+ggplot(Meantot, aes(x= reorder(Meantot$newprov, -Meantot$mean_tot), y=Meantot$mean_tot)) +
         geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
-        #geom_errorbar(aes(ymin= Meantot - se_Meantot, ymax=Meantot + se_Meantot),
-         #             width = 0.13, alpha = 1, position=position_dodge(0.75)) +
+        geom_errorbar(data=FDAMeans, aes(ymin= mean.antal - se.FDA, ymax=mean.antal + se.FDA),
+                   width = 0.13, alpha = 1, position=position_dodge(0.75)) +
         theme_classic() + 
         #scale_fill_manual(values=c("#73ba2e", "#034c77")) +
         #scale_color_manual(values=c("#000000", "#000000")) +
         scale_y_continuous(limits = c(0,150), expand = c(0,0)) +
-        labs(y="Medelantal per prov", x="", title = "") +
+        labs(y="Medelantal per prov", x="", title = "Levande celler per tvärsnitt från varje lokal") +
         theme(legend.position = c(0.9,0.9), 
               legend.title = element_blank(),
               plot.title = element_text (hjust = -0.15),
@@ -108,9 +111,9 @@ ggplot(Meantot, aes(x= reorder(newprov, -mean_tot), y=mean_tot)) +
 
 #ANOVA#####
 
-dataFDA$Behandling = factor(dataFDA$Behandling, levels=c("Kontroll", "Heatweed"))
-m = lm(dataFDA$Antal~dataFDA$Behandling)
+dataFDA_sub$Behandling = factor(dataFDA_sub$Behandling, levels=c("Kontroll", "Heatweed"))
+m = lm(dataFDA_sub$Antal~dataFDA_sub$Behandling)
 anova(m)
 summary(m)
 
-hist(dataFDA$Antal)
+hist(dataFDA_sub$Antal)
