@@ -189,6 +189,6 @@ anova(m4) #Assumes normal distribution
 
 m5 = glmmTMB(Antal ~ Behandling + (1|Lokal), dispformula =~Behandling, family="poisson", data=dataFDA_sub)
  
-Anova(m5) #Correct data distribution and heteroskedastic data (non equal variance)
+Anova(m5) #Correct data distribution and with heteroskedastic data (non equal variance)
 
 
