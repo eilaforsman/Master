@@ -56,6 +56,9 @@ dataFDA_sub$newprov <- substr(dataFDA_sub$Prov, 1, nchar(dataFDA_sub$Prov) - 2)
 Meantot<-ddply(dataFDA_sub, "newprov", summarise, mean_tot=mean(Antal))
 Meantot$order <- c(4,5,1,9,10,11,12,13,14,2,8,6,7,3)
 
+dataFDA_sub$Prov <- as.factor(dataFDA_sub$Prov)
+str(dataFDA_sub)
+
 #Basic Plotting####
 
 library(plyr)
@@ -145,7 +148,8 @@ summary(m5)
 
 boxplot(resid(m5) ~ dataFDA_sub$Behandling)
 
-m6 = glmer.nb(dataFDA_sub$Antal ~ dataFDA_sub$Behandling + (1|dataFDA_sub$Lokal), family="poisson", data=dataFDA_sub)
+m6 = glmer.nb(dataFDA_sub$Antal ~ dataFDA_sub$Behandling + (1|dataFDA_sub$Lokal) + 
+                (1|dataFDA_sub$Prov:Lokal), family="poisson", data=dataFDA_sub)
 summary(m6)
 
 boxplot(resid(m6) ~ dataFDA_sub$Behandling)
@@ -176,8 +180,8 @@ ggplot(Meantot, aes(x=reorder(Meantot$newprov, Meantot$order), y=Meantot$mean_to
                    width = 0.13, alpha = 1, position=position_dodge(0.75)) +
         theme_classic() + 
         scale_y_continuous(limits = c(0,150), expand = c(0,0)) +
-        labs(y="Medelantal per tvärsnitt", x="", 
-             title = "Levande celler per tvärsnitt från varje lokal") +
+        labs(y="Medelantal per mikrograf", x="", 
+             title = "Levande celler per mikrograf från varje lokal") +
         theme(legend.position = c(0.9,0.9), 
               legend.title = element_blank(),
               plot.title = element_text (hjust = 0.5),
