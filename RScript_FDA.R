@@ -21,16 +21,12 @@ dataFDA$Struktur <- as.factor(dataFDA$Struktur)
 dataFDA$Lokal <- as.factor(dataFDA$Lokal)
 table(dataFDA$Lokal)
 summary(dataFDA)
-boxplot(Antal~Lokal,data=dataFDA) #Testar boxplot
+
 
 library(plyr)
 dataFDA_sub <- subset(dataFDA, Lokal != "H_Pålsjö_efter_HW")
 mean_LokalFDA<-ddply(dataFDA_sub,"Lokal",summarise,
                   mean_antal=mean(Antal))
-
-mean_ID_FDA<-ddply(dataFDA_sub,"ID",summarise,
-                     mean_antal=mean(Antal))
-head(mean_ID_FDA)
 
 
 head(dataFDA_sub)
@@ -63,8 +59,8 @@ Meantot$order <- c(4,5,1,9,10,11,12,13,14,2,8,6,7,3)
 #Basic Plotting####
 
 library(plyr)
-barplot(mean_antal~Lokal,data=mean_LokalFDA,srt=35)
-str(mean_antal)
+barplot(mean_antal~Lokal,las=1, data=mean_LokalFDA,srt=35)
+
 axis(side=1,labels = FALSE)
 
 barplot(mean_antal~Lokal,data=mean_LokalFDA, xaxt="n")
@@ -75,6 +71,77 @@ text(x = 1:length(levels(mean_LokalFDA$Lokal)),
      ## Rotate the labels by 35 degrees.
      srt = 50,
      cex = 1.0)
+
+#Data exploring####
+
+hist(dataFDA_sub$Antal)
+
+dataFDA_sub$Behandling = factor(dataFDA_sub$Behandling, levels=c("Kontroll", "Heatweed"))
+m = lm(Antal~Behandling, data=dataFDA_sub)
+anova(m)
+summary(m)
+
+#Not allowed to use ANOVA to draw conclusions because data is not normally distributed
+
+#Site test#####
+
+
+kruskal.test(dataFDA_sub$Antal ~ dataFDA_sub$Prov) #Big difference between root samples
+
+kruskal.test(dataFDA_sub$Antal ~ dataFDA_sub$newprov) #Big difference between sites if control included
+
+HWsites <- subset(dataFDA_sub, dataFDA_sub$newprov != "Helsingborg_kontroll" & dataFDA_sub$newprov != "Motala_kontroll" & dataFDA_sub$newprov != "Vellinge_kontroll")
+# Removes control samples to check if test sites has an effect
+
+kruskal.test(HWsites$Antal ~ HWsites$newprov) #Big difference between HWsites, (pseudo rep)!
+
+#Mixed Model#####
+
+library(glmmTMB)
+library(MASS)
+library(car)
+library(lme4)
+library(lmerTest)
+
+?glmmTMB
+?lme4
+?lmerTest
+
+#LMM förutsätter normalfördelning
+#m3 = lmer(response ~ fixed factor + ev fixed 2+ fixed factor 1* fixed 2 + (1|random), data=data_sub)
+
+
+#GLMM
+#m3 = glmer(response ~ fixed factor + ev fixed 2+ fixed factor 1* fixed 2 + (1|random), family= "poisson", data=data_sub)
+
+#Assumes equal variances between groups, (levene.test()), sig is problem 
+#Om anova inte funkar -> testa Anova
+
+m2 = glm.nb(dataFDA_sub$Antal ~ dataFDA_sub$Behandling)
+summary(m2) #Fitted a generalized linear model with negative binomial distribution
+#to account for overdispersion. Big difference but doesn't take site into account
+
+1-(m2$deviance/m2$null.deviance)
+#[1] 0.04534703
+
+m3 = glmer(dataFDA_sub$Antal ~ dataFDA_sub$Behandling + (1|dataFDA_sub$Lokal), family="poisson", data=dataFDA_sub)
+
+Anova(m3) #assumes equal variance between groups
+
+leveneTest(dataFDA_sub$Antal ~ dataFDA_sub$Behandling) #was significant -> not equal variances
+
+library(nlme) #for weights
+
+
+m4 = lme(Antal ~ Behandling, random = ~ 1|Lokal, weights = varIdent(form= ~1|Behandling), data=dataFDA_sub)
+
+anova(m4) #Assumes normal distribution
+
+
+m5 = glmmTMB(Antal ~ Behandling + (1|Lokal), dispformula = ~ Behandling, family="poisson", data=dataFDA_sub)
+
+Anova(m5) #Correct data distribution and with non equal variance
+
 
 #Fancy plotting######
 
@@ -116,79 +183,8 @@ ggsave("Celler_FDA_plot", plot = last_plot(), device = "png",
 
 
 
-#ANOVA#####
-
-dataFDA_sub$Behandling = factor(dataFDA_sub$Behandling, levels=c("Kontroll", "Heatweed"))
-m = lm(Antal~Behandling, data=dataFDA_sub)
-anova(m)
-summary(m)
-
-hist(dataFDA_sub$Antal)
-
-#Not allowed because not normaly distributed data
-
-#Site test#####
 
 
-kruskal.test(dataFDA_sub$Antal ~ dataFDA_sub$Prov) #Big difference between root samples
 
-kruskal.test(dataFDA_sub$Antal ~ dataFDA_sub$newprov) #Big difference between sites if control included
-
-HWsites <- subset(dataFDA_sub, dataFDA_sub$newprov != "Helsingborg_kontroll" & dataFDA_sub$newprov != "Motala_kontroll" & dataFDA_sub$newprov != "Vellinge_kontroll")
-
-kruskal.test(HWsites$Antal ~ HWsites$newprov) #Big difference between HWsites, (pseudo rep)!
-
-
-#Mixed Model#####
-
-library(glmmTMB)
-library(MASS)
-library(car)
-library(lme4)
-library(lmerTest)
-
-?glmmTMB
-?car
-?lme4
-?lmerTest
-
-#LMM förutsätter normalfördelning
-#m3 = lmer(response ~ fixed factor + ev fixed 2+ 
-#fixed factor 1* fixed 2 #interaction + 
-#(1|random), data=data_sub)
-
-
-#GLMM
-#m3 = glmer(response ~ fixed factor + ev fixed 2+ 
-#fixed factor 1* fixed 2 #interaction + 
-#(1|random), family= "poisson", data=data_sub)
-
-#Antar equal variances between groups, (levene.test()), sig is problem 
-#Om anova inte funkar -> testa Anova
-
-m2 = glm.nb(dataFDA_sub$Antal ~ dataFDA_sub$Behandling)
-summary(m2) #Fitted a generalized linear model with negative binomial distribution
-#to account for overdispersion. Significant but doesn't take site into account
-
-1-(m2$deviance/m2$null.deviance)
-#[1] 0.04534703
-
-m3 = glmer(dataFDA_sub$Antal ~ dataFDA_sub$Behandling + (1|dataFDA_sub$Lokal), family="poisson", data=dataFDA_sub)
-
-Anova(m3) #assumes equal variance between groups
-
-leveneTest(dataFDA_sub$Antal ~ dataFDA_sub$Behandling) #was significant -> not equal variances
-
-library(nlme) #for weights
-
-
-m4 = lme(Antal ~ Behandling, random = ~ 1|Lokal, weights = varIdent(form= ~1|Behandling), data=dataFDA_sub)
-
-anova(m4) #Assumes normal distribution
-
-
-m5 = glmmTMB(Antal ~ Behandling + (1|Lokal), dispformula =~Behandling, family="poisson", data=dataFDA_sub)
- 
-Anova(m5) #Correct data distribution and with heteroskedastic data (non equal variance)
 
 
