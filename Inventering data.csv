@@ -1,0 +1,41 @@
+﻿Bestånd;;Längd (m);Bredd (m);Höjd;Medelantal;Medel diameter;Area;Bestånd;Diameter (mm);;;;;Antal
+Ängeltoftavägen;Heatweed;3,1;2,9;71,5;3,893214683;5;8,99;Ängeltoftavägen HW;6;5;4;4;6;35
+Magnarpsvägen;Heatweed;8,4;12,5;109;0,4;4,2;105;Magnarpsvägen HW;6;5;2;3;5;42
+Ovanvägen;Heatweed;5;2,4;70;2,333333333;4,4;12;Ovanvägen HW;5;2;2;4;9;28
+Tångvägen;Heatweed;7,3;2,2;52,5;1,120797011;5,6;16,06;Tångvägen HW;3;4;7;4;10;18
+Vinkelvägen;Kontroll;5,3;2,2;205;8,233276158;14,8;11,66;Vinkelvägen kontroll;12;3;20;19;20;96
+Vinkelvägen;Klippt;13,9;3,1;200;2,622418194;19,4;43,09;Vinkelvägen klippt;17;21;22;19;18;113
+Norra Kvickvägen;Klippt;42,5;11,6;235;9;9,652173913;493;Norra Kvickvägen klippt;10;8;11;9;16;21
+Norra Kvickvägen;Heatweed;29;4,3;151;2,485966319;8,6;124,7;;10;13;2;11;15;13
+Norra Kvickvägen;Kontroll;22,5;13,8;214;20;12,08;310,5;;5;6;6;;;3
+Sommarvägen;Klippt;9,8;10;122;1,806122449;10;98;;0;0;0;0;0;0
+Sommarvägen;Kontroll;21,2;11,4;140,5;62;6,48;241,68;;17;20;23;28;12;8
+Båtklubb;Klippt;28,6;44,4;141,5;10;7,88;1269,84;Norra Kvickvägen Heatweed;7;11;16;7;2;310
+Båtklubb;Kontroll;5,4;3,2;152;7,002314815;18,6;17,28;Norra Kvickvägen kontroll;12;3;24;2;15;27
+Sjöstigen;Heatweed;4,5;3,2;13;10;3;14,4;;9;9;1;20;9;28
+Övre Västersjövägen;Heatweed;13,9;14;171,5;24,6;6,76;194,6;;8;10;2;12;18;16
+Övre Västersjövägen;Kontroll;8,8;14,2;181;21,2;14,64;124,96;;8;2;6;21;16;18
+;;;;;;;;;12;20;16;17;30;11
+;;;;;;;;Sommarvägen klippt;5;11;12;13;9;177
+;;;;;;;;Sommarvägen kontroll;4;9;3;7;3;78
+;;;;;;;;;9;12;5;11;16;55
+;;;;;;;;;5;3;8;3;10;41
+;;;;;;;;;4;2;5;5;6;93
+;;;;;;;;;7;2;5;6;12;43
+;;;;;;;;Båtklubb klippt;12;5;6;7;7;10
+;;;;;;;;;10;11;7;8;13;13
+;;;;;;;;;6;7;5;0;0;3
+;;;;;;;;;13;2;7;5;17;12
+;;;;;;;;;13;9;5;11;11;47
+;;;;;;;;Båtklubb kontroll;19;11;18;22;23;121
+;;;;;;;;Sjöstigen HW;3;3;3;4;2;144
+;;;;;;;;Övre Västersjövägen Heatweed;11;4;5;6;15;14
+;;;;;;;;;4;5;2;7;13;32
+;;;;;;;;;3;3;7;12;5;45
+;;;;;;;;;5;8;6;7;6;12
+;;;;;;;;;5;7;12;9;2;20
+;;;;;;;;Övre Västersjövägen kontroll;19;6;6;21;20;38
+;;;;;;;;;16;19;11;6;17;7
+;;;;;;;;;22;20;19;17;17;26
+;;;;;;;;;14;13;8;14;22;25
+;;;;;;;;;10;13;14;14;8;10
