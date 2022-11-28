@@ -90,3 +90,4 @@ ggplot(invdat,(x=X), y=Medel.diameter) +
                                    hjust = 1, color = "grey1")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
+
