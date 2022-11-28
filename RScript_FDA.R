@@ -141,7 +141,18 @@ anova(m4) #Assumes normal distribution
 m5 = glmmTMB(Antal ~ Behandling + (1|Lokal), dispformula = ~ Behandling, family="poisson", data=dataFDA_sub)
 
 Anova(m5) #Correct data distribution and with non equal variance
+summary(m5)
 
+boxplot(resid(m5) ~ dataFDA_sub$Behandling)
+
+m6 = glmer.nb(dataFDA_sub$Antal ~ dataFDA_sub$Behandling + (1|dataFDA_sub$Lokal), family="poisson", data=dataFDA_sub)
+summary(m6)
+
+boxplot(resid(m6) ~ dataFDA_sub$Behandling)
+
+coefs = summary(m6)$coef
+exp(coefs[1,1])
+exp(coefs[1,1] + coefs[2,1])
 
 #Fancy plotting######
 
@@ -164,10 +175,9 @@ ggplot(Meantot, aes(x=reorder(Meantot$newprov, Meantot$order), y=Meantot$mean_to
         geom_errorbar(data=FDAMeans, aes(ymin= mean.antal - se.FDA, ymax=mean.antal + se.FDA),
                    width = 0.13, alpha = 1, position=position_dodge(0.75)) +
         theme_classic() + 
-        #scale_fill_manual(values=c("#73ba2e", "#034c77")) +
-        #scale_color_manual(values=c("#000000", "#000000")) +
         scale_y_continuous(limits = c(0,150), expand = c(0,0)) +
-        labs(y="Medelantal per tvärsnitt", x="", title = "Levande celler per tvärsnitt från varje lokal") +
+        labs(y="Medelantal per tvärsnitt", x="", 
+             title = "Levande celler per tvärsnitt från varje lokal") +
         theme(legend.position = c(0.9,0.9), 
               legend.title = element_blank(),
               plot.title = element_text (hjust = 0.5),
@@ -176,8 +186,8 @@ ggplot(Meantot, aes(x=reorder(Meantot$newprov, Meantot$order), y=Meantot$mean_to
                                          hjust = 1, color = "grey1")) +
         theme(axis.ticks.length=unit(.25, "cm"))
 
-ggsave("Celler_FDA_plot", plot = last_plot(), device = "png",
-       scale = 1, width = 20, height = 12,
+ggsave("Celler_FDA_plot.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
        dpi = 600)
 
 
