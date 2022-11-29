@@ -193,12 +193,45 @@ ggplot(Meantot, aes(x=reorder(Meantot$newprov, Meantot$order), y=Meantot$mean_to
 ggsave("Celler_FDA_plot.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
+#Gives mean number of cells per micrograph.
+
+#Mean number of cells per sample####
+
+SampleMeans <- ddply(dataFDA_sub,"Prov", summarize, N=length(Antal),
+                mean.antal=mean(na.omit(Antal)),
+                sd.FDA=sd(na.omit(Antal)),
+                se.FDA=sd.FDA/sqrt(N))
+str(SampleMeans)
+SampleMeans$Prov = as.character(SampleMeans$Prov)
 
 
+SampleMeans$newprov <- substr(SampleMeans$Prov, 1, nchar(SampleMeans$Prov) - 2)
 
+Mean_sub <- ddply(SampleMeans, "newprov", summarise, mean_sample=mean(mean.antal),
+                  sd.sample = sd(na.omit(mean.antal)),
+                  se.sample = sd.sample/sqrt(length(mean.antal)))
 
+Meantot$mean_sample = Mean_sub$mean_sample
+Meantot$sd = Mean_sub$sd.sample
+Meantot$se = Mean_sub$se.sample
 
+ggplot(Meantot, aes(x=reorder(newprov, order), y=mean_sample)) +
+  geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
+  geom_errorbar(data=Meantot, aes(ymin= mean_sample - se, 
+                                   ymax=mean_sample + se),
+                width = 0.13, alpha = 1, position=position_dodge(0.75)) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,500), expand = c(0,0)) +
+  labs(y="Medelantal per prov", x="", 
+       title = "Levande celler per prov från varje lokal") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 20, angle = 60,
+                                   hjust = 1, color = "grey1")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
 
-
-
-
+ggsave("Celler_prov_plot.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
