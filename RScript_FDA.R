@@ -197,6 +197,7 @@ ggsave("Celler_FDA_plot.png", plot = last_plot(), device = "png",
 
 #Mean number of cells per sample####
 
+
 SampleMeans <- ddply(dataFDA_sub,"Prov", summarize, N=length(Antal),
                 mean.antal=mean(na.omit(Antal)),
                 sd.FDA=sd(na.omit(Antal)),
@@ -207,13 +208,14 @@ SampleMeans$Prov = as.character(SampleMeans$Prov)
 
 SampleMeans$newprov <- substr(SampleMeans$Prov, 1, nchar(SampleMeans$Prov) - 2)
 
-Mean_sub <- ddply(SampleMeans, "newprov", summarise, mean_sample=mean(mean.antal),
-                  sd.sample = sd(na.omit(mean.antal)),
-                  se.sample = sd.sample/sqrt(length(mean.antal)))
+Sample = aggregate(cbind(SampleMeans$mean.antal, SampleMeans$sd.FDA, 
+                         SampleMeans$se.FDA), 
+                   by=list(newprov=SampleMeans$newprov), FUN =sum)
 
-Meantot$mean_sample = Mean_sub$mean_sample
-Meantot$sd = Mean_sub$sd.sample
-Meantot$se = Mean_sub$se.sample
+
+Meantot$mean_sample = Sample$V1
+Meantot$sd = Sample$V2
+Meantot$se = Sample$V3
 
 ggplot(Meantot, aes(x=reorder(newprov, order), y=mean_sample)) +
   geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
