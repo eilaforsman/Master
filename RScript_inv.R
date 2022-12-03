@@ -58,11 +58,14 @@ m1 = lm(invdat$Medel.diameter~invdat$Behandling-1)
 summary(m1)
 
 #Mean number
+library(lme4)
+library(MASS)
+
 hist(invdat$Medelantal)
 invdat$logantal <- log(invdat$Medelantal)
 hist(invdat$logantal)
 
-m3 = lm(invdat$logantal~invdat$Behandling) 
+m3 = glm.nb(Medelantal~Behandling, data=invdat_sub) 
 anova(m3)
 summary(m3) #35.6% of variance is explained 
 
