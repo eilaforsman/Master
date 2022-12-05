@@ -19,6 +19,7 @@ head(dataFDA)
 str(dataFDA)
 dataFDA$Struktur <- as.factor(dataFDA$Struktur)
 dataFDA$Lokal <- as.factor(dataFDA$Lokal)
+dataFDA$Kommun <- as.factor(dataFDA$Kommun)
 table(dataFDA$Lokal)
 summary(dataFDA)
 
@@ -75,7 +76,7 @@ text(x = 1:length(levels(mean_LokalFDA$Lokal)),
 
 #Data exploring####
 
-hist(dataFDA_sub$Antal, xlab="Number of cells", las=1)
+hist(dataFDA_sub$Antal, xlab="Number of cells", las=1, main=NULL)
 
 dataFDA_sub$Behandling = factor(dataFDA_sub$Behandling, levels=c("Kontroll", "Heatweed"))
 m = lm(Antal~Behandling, data=dataFDA_sub)
@@ -301,3 +302,32 @@ r2(m12)
 m13 = glmmTMB(Antal ~ 1 + (1|Lokal/Prov), family="nbinom1", data=datHW)
 summary(m13)
 r2(m13)
+
+#Difference between municipalities####
+
+plot(datHW$Antal ~ datHW$Kommun, las=1)
+
+mm = glm.nb(Antal ~ Kommun, data=datHW)
+anova(mm)
+summary(mm) #Vellinge smaller
+
+mm1 = glm.nb(Antal ~ Kommun-1, data=datHW)
+summary(mm1)
+
+coef2 = summary(mm1)$coef
+exp(coef2[1,1]) #24.69804 mean Gothenburg
+exp(coef2[2,1]) #21.44664 mean Helsingborg
+exp(coef2[3,1]) #23.43799 mean Motala
+exp(coef2[4,1]) #4.520792 mean Vellinge
+
+Kommun = aggregate(Prov$mean_antal, by = list(Prov=datHW$Prov), FUN = mean)
+
+Sample = aggregate(cbind(SampleMeans$mean.antal, SampleMeans$sd.FDA, 
+                         SampleMeans$se.FDA), 
+                   by=list(newprov=SampleMeans$newprov), FUN =sum)
+
+
+
+
+
+
