@@ -305,9 +305,9 @@ r2(m13)
 
 #Difference between municipalities####
 
-plot(datHW$Antal ~ datHW$Kommun, las=1)
+plot(datHW$Antal ~ datHW$Kommun, las=1) #visualize data
 
-mm = glm.nb(Antal ~ Kommun, data=datHW)
+mm = glm.nb(Antal ~ Kommun, data=datHW) #Fit model for number of cells per micrograph
 anova(mm)
 summary(mm) #Vellinge smaller
 
@@ -320,14 +320,59 @@ exp(coef2[2,1]) #21.44664 mean Helsingborg
 exp(coef2[3,1]) #23.43799 mean Motala
 exp(coef2[4,1]) #4.520792 mean Vellinge
 
-Kommun = aggregate(Prov$mean_antal, by = list(Prov=datHW$Prov), FUN = mean)
+Meantot$Kommun = c("Helsingborg", "Helsingborg", "Helsingborg", "Motala",
+                   "Motala","Motala","Motala","Motala","Motala","Motala",
+                   "Göteborg", "Vellinge","Vellinge","Vellinge")
+meantot_sub = subset(Meantot, Meantot$newprov != "Helsingborg_kontroll" & Meantot$newprov != "Motala_kontroll" & Meantot$newprov != "Vellinge_kontroll")
+meantot_sub$Kommun = as.factor(meantot_sub$Kommun)
+str(meantot_sub)
 
-Sample = aggregate(cbind(SampleMeans$mean.antal, SampleMeans$sd.FDA, 
-                         SampleMeans$se.FDA), 
-                   by=list(newprov=SampleMeans$newprov), FUN =sum)
+hist(meantot_sub$mean_sample)
+meantot_sub$logsample = log(meantot_sub$mean_sample)
+
+mm2 = glm(logsample ~ Kommun, data=meantot_sub) #Fit model to log data 
+summary(mm2) 
+
+mm2 = glm(logsample ~ Kommun-1, data=meantot_sub) #Get estimated means (log scale)
+summary(mm2)
+
+coef3 = summary(mm2)$coef
+exp(coef3[1,1]) #[1] 122.446 Mean Göteborg
+exp(coef3[2,1]) #[1] 62.73146 Mean Helsingborg
+exp(coef3[3,1]) # [1] 90.49646 Mean Motala
+exp(coef3[4,1]) # [1] 4.32938 Mean Vellinge
+
+exp(coef3[1,2]) # [1] 4.641823 SE G
+exp(coef3[2,2]) # [1] 2.960874 SE H
+exp(coef3[3,2]) # [1] 1.871434 SE M
+exp(coef3[4,2]) # [1] 2.960874 SE V
 
 
+#Plotting municipalities####
 
+plot(meantot_sub$mean_sample ~ meantot_sub$Kommun)
+
+ggplot(meantot_sub, aes(x=Kommun, y=mean_sample, fill=Kommun)) +
+  geom_boxplot() +
+  scale_fill_grey() +
+  #geom_errorbar(data=Meantot, aes(ymin= mean_sample - se, 
+                                  #ymax=mean_sample + se),
+                #width = 0.13, alpha = 1, position=position_dodge(0.75)) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,500), expand = c(0,0)) +
+  labs(y="Number of cells", x="", 
+       title = "Number of live cells per sample from each municipality") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 20, angle = 60,
+                                   hjust = 1, color = "grey1")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("Kommun_prov_boxplot.png", plot = last_plot(), device = "png",
+       scale = 1, width = 13, height = 8,
+       dpi = 600)
 
 
 
