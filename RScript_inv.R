@@ -78,35 +78,148 @@ exp(coefs[2,1])
 exp(coefs[3,1])
 
 #Area
-hist(invdat$Area)
-invdat$logarea <- log(invdat$Area)
-hist(invdat$logarea)
+hist(invdat_sub$Area)
+invdat_sub$logarea <- log(invdat_sub$Area)
+hist(invdat_sub$logarea)
 
-invdat$Behandling = factor(invdat$Behandling, levels=c("Kontroll", "Klippt", "Heatweed"))
+invdat_sub$Behandling = factor(invdat_sub$Behandling, levels=c("Kontroll", "Klippt", "Heatweed"))
 #Change order so kontroll is intercept
-m4 = lm(invdat$logarea~invdat$Behandling) 
+m4 = lm(invdat_sub$logarea~invdat_sub$Behandling) 
 anova(m4)
 summary(m4) #25.2% of variance explained
 
-m1 = lm(invdat$logarea~invdat$Behandling-1)
+m1 = lm(invdat_sub$logarea~invdat_sub$Behandling-1)
 summary(m1)
 
 #Plotting####
+library(ggplot2)
+library(plyr)
 
-ggplot(invdat_sub, aes(x=Behandling, y=Medel.diameter)) +
-  geom_col(width = 0.75, color="black", fill="grey") +
-  #geom_errorbar(data=FDAMeans, aes(ymin= mean.antal - se.FDA, ymax=mean.antal + se.FDA),
-                #width = 0.13, alpha = 1, position=position_dodge(0.75)) +
+#Mean diameter
+stats <- ddply(invdat_sub,"Behandling", summarize, N=length(Medel.diameter),
+                     mean.diameter=mean(na.omit(Medel.diameter)),
+                     sd=sd(na.omit(Medel.diameter)),
+                     se=sd/sqrt(N)) 
+
+ggplot(data = stats, aes(x=Behandling, y=mean.diameter, 
+                       fill=Behandling)) +
+  geom_col() +
+  scale_fill_grey() +
+  geom_errorbar(data=stats, 
+                aes(ymin = mean.diameter - se, 
+                    ymax = mean.diameter + se),
+                width = 0.13, alpha = 1) +
   theme_classic() + 
-  #scale_fill_manual(values=c("#73ba2e", "#034c77")) +
-  #scale_color_manual(values=c("#000000", "#000000")) +
-  scale_y_continuous(limits = c(0,150), expand = c(0,0)) +
-  labs(y="Medeldiameter (mm)", x="Behandling", 
-       title = "Skillnad i medeldiameter mellan behandlingar") +
-  theme(plot.title = element_text (hjust = 0.5),
+  scale_y_continuous(limits = c(0,20), expand = c(0,0)) +
+  labs(y="Medeldiameter (mm)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
         text = element_text(size=28, family= "Times"),
-        axis.text.x = element_text(size = 20, angle = 60,
-                                   hjust = 1, color = "grey1")) +
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "grey1")) +
   theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("medeldiameter.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+#Mean height
+
+stats <- ddply(invdat_sub,"Behandling", summarize, N=length(Höjd),
+               mean.height=mean(na.omit(Höjd)),
+               sd=sd(na.omit(Höjd)),
+               se=sd/sqrt(N)) 
+
+
+ggplot(data = stats, aes(x=Behandling, y=mean.height, 
+                         fill=Behandling)) +
+  geom_col() +
+  scale_fill_grey() +
+  geom_errorbar(data=stats, 
+                aes(ymin = mean.height - se, 
+                    ymax = mean.height + se),
+                width = 0.13, alpha = 1) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,250), expand = c(0,0)) +
+  labs(y="Medelhöjd (cm)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "grey1")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("medelhöjd.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+#Mean number of shoots
+
+
+stats <- ddply(invdat_sub,"Behandling", summarize, N=length(Medelantal),
+               mean.number=mean(na.omit(Medelantal)),
+               sd=sd(na.omit(Medelantal)),
+               se=sd/sqrt(N)) 
+
+ggplot(data = stats, aes(x=Behandling, y=mean.number, 
+                         fill=Behandling)) +
+  geom_col() +
+  scale_fill_grey() +
+  geom_errorbar(data=stats, 
+                aes(ymin = mean.number - se, 
+                    ymax = mean.number + se),
+                width = 0.13, alpha = 1) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,40), expand = c(0,0)) +
+  labs(y="Täthet av skott", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "grey1")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("medelantal.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+#Mean area
+
+stats <- ddply(invdat_sub,"Behandling", summarize, N=length(logarea),
+               mean.area=mean(na.omit(logarea)),
+               sd=sd(na.omit(logarea)),
+               se=sd/sqrt(N)) 
+
+ggplot(data = stats, aes(x=Behandling, y=mean.area, 
+                         fill=Behandling)) +
+  geom_col() +
+  scale_fill_grey() +
+  geom_errorbar(data=stats, 
+                aes(ymin = mean.area - se, 
+                    ymax = mean.area + se),
+                width = 0.13, alpha = 1) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,10), expand = c(0,0)) +
+  labs(y="Log Medelarea (m^2)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "grey1")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("medelarea.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+
 
 
