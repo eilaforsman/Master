@@ -303,6 +303,51 @@ m13 = glmmTMB(Antal ~ 1 + (1|Lokal/Prov), family="nbinom1", data=datHW)
 summary(m13)
 r2(m13)
 
+#Plotting treatment difference####
+
+plot(dataFDA_sub$Antal ~ dataFDA_sub$Behandling, las=1)
+
+ggplot(dataFDA_sub, aes(x=Behandling, y=Antal, fill=Behandling)) +
+  geom_boxplot() +
+  scale_fill_grey() +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,500), expand = c(0,0)) +
+  labs(y="Antal celler", x="", 
+       title = "Skillnad i antal levande celler per mikrograf") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("Behandling_bild_boxplot.png", plot = last_plot(), device = "png",
+       scale = 1, width = 13, height = 8,
+       dpi = 600)
+
+#Same plot in english
+
+ggplot(dataFDA_sub, aes(x=Behandling, y=Antal, fill=Behandling)) +
+  geom_boxplot() +
+  scale_fill_grey() +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,500), expand = c(0,0)) +
+  labs(y="Number of cells", x="", 
+       title = "Difference in number of live cells per micrograph") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("Treatment_bild_boxplot.png", plot = last_plot(), device = "png",
+       scale = 1, width = 13, height = 8,
+       dpi = 600)
+
+
 #Difference between municipalities####
 
 plot(datHW$Antal ~ datHW$Kommun, las=1) #visualize data
@@ -320,6 +365,29 @@ exp(coef2[2,1]) #21.44664 mean Helsingborg
 exp(coef2[3,1]) #23.43799 mean Motala
 exp(coef2[4,1]) #4.520792 mean Vellinge
 
+datHW$Kommun = factor(datHW$Kommun, levels=c("Vellinge", "Göteborg", "Helsingborg", "Motala"))
+
+mm = glmmTMB(Antal ~ Kommun + (1|Lokal/Prov), family="nbinom1", datHW)
+summary(mm) #Fit model where site and sample are random factors
+#Vellinge fewest cells, differ from Motala.
+
+boxplot(resid(mm) ~ datHW$Kommun)
+
+coef4 = summary(mm)
+coef4 = coef4[["coefficients"]][["cond"]] # Mean cells per micrograph, log scale
+exp(coef4[1,1]) # [1] 1.120687 mean V
+exp(coef4[1,1] + coef4[2,1]) # [1] 6.475923 mean G
+exp(coef4[1,1] + coef4[3,1]) # [1] 5.773852 mean H
+exp(coef4[1,1] + coef4[4,1]) # [1] 6.131035 mean M
+
+exp(coef4[1,2]) # [1] 1.901537 SE V
+exp(coef4[1,2] + coef4[2,2]) # [1] 5.541874 SE G
+exp(coef4[1,2] + coef4[3,2]) # [1] 4.608651 SE H
+exp(coef4[1,2] + coef4[4,2]) # [1] 3.949547 SE M
+
+
+
+#Unnecessary? sample modelling
 Meantot$Kommun = c("Helsingborg", "Helsingborg", "Helsingborg", "Motala",
                    "Motala","Motala","Motala","Motala","Motala","Motala",
                    "Göteborg", "Vellinge","Vellinge","Vellinge")
@@ -327,52 +395,71 @@ meantot_sub = subset(Meantot, Meantot$newprov != "Helsingborg_kontroll" & Meanto
 meantot_sub$Kommun = as.factor(meantot_sub$Kommun)
 str(meantot_sub)
 
+meantot_sub$Kommun = factor(meantot_sub$Kommun, levels=c("Vellinge", "Göteborg", "Helsingborg", "Motala"))
+
+
 hist(meantot_sub$mean_sample)
 meantot_sub$logsample = log(meantot_sub$mean_sample)
 
-mm2 = glm(logsample ~ Kommun, data=meantot_sub) #Fit model to log data 
+mm2 = lm(logsample ~ Kommun, data=meantot_sub) #Fit model to log data 
 summary(mm2) 
 
-mm2 = glm(logsample ~ Kommun-1, data=meantot_sub) #Get estimated means (log scale)
+mm2 = lm(logsample ~ Kommun-1, data=meantot_sub) #Get estimated means (log scale)
 summary(mm2)
 
 coef3 = summary(mm2)$coef
-exp(coef3[1,1]) #[1] 122.446 Mean Göteborg
-exp(coef3[2,1]) #[1] 62.73146 Mean Helsingborg
-exp(coef3[3,1]) # [1] 90.49646 Mean Motala
-exp(coef3[4,1]) # [1] 4.32938 Mean Vellinge
+exp(coef3[1,1]) #[1] 4.32938 Mean Vellinge
+exp(coef3[2,1]) #[1] 122.446 Mean Göteborg
+exp(coef3[3,1]) # [1] 62.73146 Mean Helsingborg
+exp(coef3[4,1]) # [1] 90.49646 Mean Motala
 
-exp(coef3[1,2]) # [1] 4.641823 SE G
-exp(coef3[2,2]) # [1] 2.960874 SE H
-exp(coef3[3,2]) # [1] 1.871434 SE M
-exp(coef3[4,2]) # [1] 2.960874 SE V
+exp(coef3[1,2]) # [1] 2.960874 SE V
+exp(coef3[2,2]) # [1] 4.641823 SE G
+exp(coef3[3,2]) # [1] 2.960874 SE H
+exp(coef3[4,2]) # [1] 1.871434 SE M
 
 
-#Plotting municipalities####
+#Plotting municipalities sample####
 
 plot(meantot_sub$mean_sample ~ meantot_sub$Kommun)
 
 ggplot(meantot_sub, aes(x=Kommun, y=mean_sample, fill=Kommun)) +
   geom_boxplot() +
   scale_fill_grey() +
-  #geom_errorbar(data=Meantot, aes(ymin= mean_sample - se, 
-                                  #ymax=mean_sample + se),
-                #width = 0.13, alpha = 1, position=position_dodge(0.75)) +
   theme_classic() + 
-  scale_y_continuous(limits = c(0,500), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,400), expand = c(0,0)) +
   labs(y="Number of cells", x="", 
        title = "Number of live cells per sample from each municipality") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),
         plot.title = element_text (hjust = 0.5),
         text = element_text(size=28, family= "Times"),
-        axis.text.x = element_text(size = 20, angle = 60,
-                                   hjust = 1, color = "grey1")) +
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
 ggsave("Kommun_prov_boxplot.png", plot = last_plot(), device = "png",
        scale = 1, width = 13, height = 8,
        dpi = 600)
 
+#Plotting municipalities micrograph
 
+ggplot(meantot_sub, aes(x=Kommun, y=mean_tot, fill=Kommun)) +
+  geom_boxplot() +
+  scale_fill_grey() +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,75), expand = c(0,0)) +
+  labs(y="Number of cells", x="", 
+       title = "Number of live cells per micrograph from each municipality") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("Kommun_bild_boxplot.png", plot = last_plot(), device = "png",
+       scale = 1, width = 13, height = 8,
+       dpi = 600)
 
