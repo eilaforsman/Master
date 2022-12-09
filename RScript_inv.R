@@ -118,7 +118,7 @@ ggplot(data = stats, aes(x=Behandling, y=mean.diameter,
         plot.title = element_text (hjust = 0.5),
         text = element_text(size=28, family= "Times"),
         axis.text.x = element_text(size = 28, angle = 0,
-                                   hjust = 0.5, color = "grey1")) +
+                                   hjust = 0.5, color = "black"))+
   theme(axis.ticks.length=unit(.25, "cm"))
 
 ggsave("medeldiameter.png", plot = last_plot(), device = "png",
@@ -150,7 +150,7 @@ ggplot(data = stats, aes(x=Behandling, y=mean.height,
         plot.title = element_text (hjust = 0.5),
         text = element_text(size=28, family= "Times"),
         axis.text.x = element_text(size = 28, angle = 0,
-                                   hjust = 0.5, color = "grey1")) +
+                                   hjust = 0.5, color = "black")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
 ggsave("medelhöjd.png", plot = last_plot(), device = "png",
@@ -160,9 +160,9 @@ ggsave("medelhöjd.png", plot = last_plot(), device = "png",
 #Mean number of shoots
 
 
-stats <- ddply(invdat_sub,"Behandling", summarize, N=length(Medelantal),
-               mean.number=mean(na.omit(Medelantal)),
-               sd=sd(na.omit(Medelantal)),
+stats <- ddply(invdat_sub,"Behandling", summarize, N=length(logantal),
+               mean.number=mean(na.omit(logantal)),
+               sd=sd(na.omit(logantal)),
                se=sd/sqrt(N)) 
 
 ggplot(data = stats, aes(x=Behandling, y=mean.number, 
@@ -174,7 +174,7 @@ ggplot(data = stats, aes(x=Behandling, y=mean.number,
                     ymax = mean.number + se),
                 width = 0.13, alpha = 1) +
   theme_classic() + 
-  scale_y_continuous(limits = c(0,40), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,5), expand = c(0,0)) +
   labs(y="Täthet av skott", x="", 
        title = "") +
   theme(legend.position = c(0.9,0.9), 
@@ -182,10 +182,10 @@ ggplot(data = stats, aes(x=Behandling, y=mean.number,
         plot.title = element_text (hjust = 0.5),
         text = element_text(size=28, family= "Times"),
         axis.text.x = element_text(size = 28, angle = 0,
-                                   hjust = 0.5, color = "grey1")) +
+                                   hjust = 0.5, color = "black")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
-ggsave("medelantal.png", plot = last_plot(), device = "png",
+ggsave("logantal.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
 
@@ -213,7 +213,7 @@ ggplot(data = stats, aes(x=Behandling, y=mean.area,
         plot.title = element_text (hjust = 0.5),
         text = element_text(size=28, family= "Times"),
         axis.text.x = element_text(size = 28, angle = 0,
-                                   hjust = 0.5, color = "grey1")) +
+                                   hjust = 0.5, color = "black")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
 ggsave("medelarea.png", plot = last_plot(), device = "png",
