@@ -174,7 +174,7 @@ ggplot(data = stats, aes(x=Behandling, y=mean.number,
                     ymax = mean.number + se),
                 width = 0.13, alpha = 1) +
   theme_classic() + 
-  scale_y_continuous(limits = c(0,5), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,4), expand = c(0,0)) +
   labs(y="Täthet av skott", x="", 
        title = "") +
   theme(legend.position = c(0.9,0.9), 
@@ -220,6 +220,168 @@ ggsave("medelarea.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
 
+#English plots####
+
+invdat_sub$treatment = c("Heatweed","Heatweed","Heatweed","Heatweed",
+                         "Control", "Mowed", "Mowed", "Heatweed",
+                         "Control", "Mowed", "Control", "Mowed",
+                         "Control","Heatweed","Heatweed","Control")
+
+invdat_sub$treatment = factor(invdat_sub$treatment, levels=c("Control", "Mowed", "Heatweed"))
+
+#Mean diameter
+stats <- ddply(invdat_sub,"treatment", summarize, N=length(Medel.diameter),
+               mean.diameter=mean(na.omit(Medel.diameter)),
+               sd=sd(na.omit(Medel.diameter)),
+               se=sd/sqrt(N)) 
+
+ggplot(data = stats, aes(x=treatment, y=mean.diameter, 
+                         fill=treatment)) +
+  geom_col() +
+  scale_fill_grey() +
+  geom_errorbar(data=stats, 
+                aes(ymin = mean.diameter - se, 
+                    ymax = mean.diameter + se),
+                width = 0.13, alpha = 1) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,20), expand = c(0,0)) +
+  labs(y="Mean diameter (mm)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black"))+
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("meandiameter.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+#Mean height
+
+stats <- ddply(invdat_sub,"treatment", summarize, N=length(Höjd),
+               mean.height=mean(na.omit(Höjd)),
+               sd=sd(na.omit(Höjd)),
+               se=sd/sqrt(N)) 
 
 
+ggplot(data = stats, aes(x=treatment, y=mean.height, 
+                         fill=treatment)) +
+  geom_col() +
+  scale_fill_grey() +
+  geom_errorbar(data=stats, 
+                aes(ymin = mean.height - se, 
+                    ymax = mean.height + se),
+                width = 0.13, alpha = 1) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,250), expand = c(0,0)) +
+  labs(y="Mean height (cm)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
 
+ggsave("meanheight.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+#Mean number of shoots log scale
+
+
+stats <- ddply(invdat_sub,"treatment", summarize, N=length(logantal),
+               mean.number=mean(na.omit(logantal)),
+               sd=sd(na.omit(logantal)),
+               se=sd/sqrt(N)) 
+
+ggplot(data = stats, aes(x=treatment, y=mean.number, 
+                         fill=treatment)) +
+  geom_col() +
+  scale_fill_grey() +
+  geom_errorbar(data=stats, 
+                aes(ymin = mean.number - se, 
+                    ymax = mean.number + se),
+                width = 0.13, alpha = 1) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,4), expand = c(0,0)) +
+  labs(y="Shoot density (log)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("logdensity.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+#Mean number of shoots normal scale
+
+
+stats <- ddply(invdat_sub,"treatment", summarize, N=length(Medelantal),
+               mean.number=mean(na.omit(Medelantal)),
+               sd=sd(na.omit(Medelantal)),
+               se=sd/sqrt(N)) 
+
+ggplot(data = stats, aes(x=treatment, y=mean.number, 
+                         fill=treatment)) +
+  geom_col() +
+  scale_fill_grey() +
+  geom_errorbar(data=stats, 
+                aes(ymin = mean.number - se, 
+                    ymax = mean.number + se),
+                width = 0.13, alpha = 1) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,40), expand = c(0,0)) +
+  labs(y="Shoot density", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("shootdensity.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+#Mean area
+
+stats <- ddply(invdat_sub,"treatment", summarize, N=length(logarea),
+               mean.area=mean(na.omit(logarea)),
+               sd=sd(na.omit(logarea)),
+               se=sd/sqrt(N)) 
+
+ggplot(data = stats, aes(x=treatment, y=mean.area, 
+                         fill=treatment)) +
+  geom_col() +
+  scale_fill_grey() +
+  geom_errorbar(data=stats, 
+                aes(ymin = mean.area - se, 
+                    ymax = mean.area + se),
+                width = 0.13, alpha = 1) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,10), expand = c(0,0)) +
+  labs(y="Log mean area (m^2)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("meanarea.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
