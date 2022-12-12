@@ -326,7 +326,7 @@ ggsave("Behandling_bild_boxplot.png", plot = last_plot(), device = "png",
        scale = 1, width = 13, height = 8,
        dpi = 600)
 
-#Same plot in english
+#Same plot in English
 
 ggplot(dataFDA_sub, aes(x=Behandling, y=Antal, fill=Behandling)) +
   geom_boxplot() +
