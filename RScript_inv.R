@@ -65,6 +65,8 @@ hist(invdat_sub$Medelantal)
 invdat_sub$logantal <- log(invdat_sub$Medelantal)
 hist(invdat_sub$logantal)
 
+invdat_sub = subset(invdat_sub, invdat_sub$Bestånd != "Magnarpsvägen")
+
 m3 = lm(logantal~Behandling, data=invdat_sub) 
 anova(m3)
 summary(m3) #OBS log scale, #35.6% of variance is explained 
@@ -175,7 +177,7 @@ ggplot(data = stats, aes(x=Behandling, y=mean.number,
                 width = 0.13, alpha = 1) +
   theme_classic() + 
   scale_y_continuous(limits = c(0,4), expand = c(0,0)) +
-  labs(y="Täthet av skott", x="", 
+  labs(y="Täthet av skott (log)", x="", 
        title = "") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),

@@ -4,9 +4,10 @@ list.files ()
 #Stapeldiagram medelantal per plats, medel på enskilda snitten först 
 #Antal HW vs kontroll
 #Antal skillnad i lokaler beror på region?
-#Two-way ANOVA HW vs kontroll och antal per lokal
+#Nested HW vs kontroll och skillnad mellan lokal
 #Medelvärde antal per lokal (Pålsjö 1,2,3,4,5)
 #5vs6ggr
+#Pålsjö efter HW
 #Skillnad i död/levande eller antal mellan strukturer
 
 #Basic####
@@ -26,9 +27,6 @@ summary(dataFDA)
 
 library(plyr)
 dataFDA_sub <- subset(dataFDA, Lokal != "H_Pålsjö_efter_HW") #Remove "efter_HW" because its a different treatment
-mean_LokalFDA<-ddply(dataFDA_sub,"Lokal",summarise,
-                     mean_antal=mean(Antal)) #Summarize data by site
-
 
 head(dataFDA_sub)
 
@@ -39,8 +37,6 @@ library(stringr)
 
 ID_split <- as.data.frame(str_split_fixed(dataFDA_sub$ID, "_", 2))
 head(ID_split)
-
-
 
 
 dataFDA_sub$ID_spec <- ID_split$V1
@@ -367,9 +363,12 @@ exp(coef2[4,1]) #4.520792 mean Vellinge
 
 datHW$Kommun = factor(datHW$Kommun, levels=c("Vellinge", "Göteborg", "Helsingborg", "Motala"))
 
-mm = glmmTMB(Antal ~ Kommun + (1|Lokal/Prov), family="nbinom1", datHW)
+mm = glmmTMB(Antal ~ Kommun + (1|Prov), family="nbinom1", datHW)
 summary(mm) #Fit model where site and sample are random factors
 #Vellinge fewest cells, differ from Motala.
+
+mm2 = glmmTMB(Antal ~ Kommun + (1|Prov), family="nbinom1", datC)
+summary(mm2)
 
 boxplot(resid(mm) ~ datHW$Kommun)
 
@@ -463,3 +462,7 @@ ggsave("Kommun_bild_boxplot.png", plot = last_plot(), device = "png",
        scale = 1, width = 13, height = 8,
        dpi = 600)
 
+
+#Structure####
+
+plot(Antal ~ Struktur, data=datC)
