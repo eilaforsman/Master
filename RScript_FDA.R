@@ -196,14 +196,14 @@ ggplot(Meantot, aes(x=reorder(Meantot$newprov, Meantot$order), y=Meantot$mean_to
                 width = 0.13, alpha = 1, position=position_dodge(0.75)) +
   theme_classic() + 
   scale_y_continuous(limits = c(0,150), expand = c(0,0)) +
-  labs(y="Mean number per cross section", x="", 
-       title = "Number of live cells per cross section from each site") +
+  labs(y="Mean number of live cells", x="", 
+       title = "") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),
         plot.title = element_text (hjust = 0.5),
         text = element_text(size=28, family= "Times"),
         axis.text.x = element_text(size = 20, angle = 60,
-                                   hjust = 1, color = "grey1")) +
+                                   hjust = 1, color = "black")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
 ggsave("Celler_FDA_plot.png", plot = last_plot(), device = "png",
@@ -330,7 +330,7 @@ ggplot(dataFDA_sub, aes(x=Behandling, y=Antal, fill=Behandling)) +
   theme_classic() + 
   scale_y_continuous(limits = c(0,500), expand = c(0,0)) +
   labs(y="Number of cells", x="", 
-       title = "Difference in number of live cells per micrograph") +
+       title = "") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),
         plot.title = element_text (hjust = 0.5),
