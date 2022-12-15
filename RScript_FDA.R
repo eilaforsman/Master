@@ -190,6 +190,10 @@ FDAMeans<-ddply(dataFDA_sub,"Lokal", summarize, N=length(Antal),
                 sd.FDA=sd(na.omit(Antal)),
                 se.FDA=sd.FDA/sqrt(N)) #Summarize data per site with sd and se for creating error bars
 
+Meantot$newprov = gsub("Helsingborg_kontroll", "Helsingborg_control", Meantot$newprov)
+Meantot$newprov = gsub("Motala_kontroll", "Motala_control", Meantot$newprov)
+Meantot$newprov = gsub("Vellinge_kontroll", "Vellinge_control", Meantot$newprov)
+
 ggplot(Meantot, aes(x=reorder(Meantot$newprov, Meantot$order), y=Meantot$mean_tot)) +
   geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
   geom_errorbar(data=FDAMeans, aes(ymin= mean.antal - se.FDA, ymax=mean.antal + se.FDA),
@@ -303,13 +307,15 @@ r2(m13)
 
 plot(dataFDA_sub$Antal ~ dataFDA_sub$Behandling, las=1)
 
+dataFDA_sub$Behandling = gsub("Kontroll", "Control", dataFDA_sub$Behandling)
+
 ggplot(dataFDA_sub, aes(x=Behandling, y=Antal, fill=Behandling)) +
   geom_boxplot() +
   scale_fill_grey() +
   theme_classic() + 
   scale_y_continuous(limits = c(0,500), expand = c(0,0)) +
-  labs(y="Antal celler", x="", 
-       title = "Skillnad i antal levande celler per mikrograf") +
+  labs(y="Number of live cells", x="", 
+       title = "") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),
         plot.title = element_text (hjust = 0.5),
