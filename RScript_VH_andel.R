@@ -7,14 +7,76 @@ VH <- read.csv("Andel_VH.csv", sep=';')
 str(VH)
 
 head(VH)
-str(VH)
-VH$Plats<- as.factor(VH$Plats)
-table(VH$Plats)
+
+#Data sorting####
+
+VH$Procent.levande <- gsub(",",".", VH$Procent.levande)
+VH$Procent.levande <- as.numeric(VH$Procent.levande)
+
 VH$Procent.död = gsub(",",".", VH$Procent.död)
 VH$Procent.död<-as.numeric(VH$Procent.död)
-mean_LokalAndel<-ddply(VH,"Plats",summarise,mean_död=mean(Procent.död))
-barplot(mean_död~Plats, data=mean_LokalAndel)
 
-qqnorm(VH$död)
-hist(VH$död)
+VH$Plats = gsub(":", "_", VH$Plats)
+VH$Plats<- as.factor(VH$Plats)
+str(VH)
+
+VH = subset(VH, select = c(Plats, Grupp, levande, död, Procent.levande, 
+                           Procent.död, Totala.antal.behandlingar))
+VH <- VH[!apply(is.na(VH) | VH == "", 1, all),]
+
+VH_sub = subset(VH, VH$Plats != "H_ Pålsjö efter HW")
+
+VH_sub$Plats = gsub("Helsingborg kontroll","Helsingborg control", VH_sub$Plats)
+VH_sub$Plats = gsub("Flommen kontroll","Vellinge control", VH_sub$Plats)
+VH_sub$Plats = gsub("Motala kontroll","Motala control", VH_sub$Plats)
+
+#Plotting live samples####
+
+ggplot(VH_sub, aes(x=reorder(Plats, Grupp), y=Procent.levande)) +
+  geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
+  #geom_errorbar(data=Meantot, aes(ymin= mean_sample - se, 
+                                  #ymax=mean_sample + se),
+                #width = 0.13, alpha = 1, position=position_dodge(0.75)) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,110), expand = c(0,0)) +
+  labs(y="Proportion of shoots emerged (%)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 20, angle = 60,
+                                   hjust = 1, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("VH_live.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+#Chi-2 testing####
+
+VH_sub_HW = subset(VH_sub, VH_sub$Plats != "Helsingborg control" &
+                VH_sub$Plats != "Vellinge control" &
+                VH_sub$Plats != "Motala control")
+
+chi = subset(VH_sub_HW, select=c(Plats, levande))
+View(chi)
+str(chi)
+chi$Plats = as.factor(chi$Plats)
+chi$exp = c(rep(4.7, length(chi$levande)))
+
+Xsq <- chisq.test(chi$Plats, chi$levande)  # Prints test summary
+Xsq$observed   # observed counts (same as M)
+Xsq$expected   # expected counts under the null
+Xsq$residuals  # Pearson residuals
+Xsq$stdres     # standardized residuals
+
+
+
+
+
+
+
+
+
 
