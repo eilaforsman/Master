@@ -65,7 +65,7 @@ hist(invdat_sub$Medelantal)
 invdat_sub$logantal <- log(invdat_sub$Medelantal)
 hist(invdat_sub$logantal)
 
-invdat_sub = subset(invdat_sub, invdat_sub$Bestånd != "Magnarpsvägen")
+#invdat_sub = subset(invdat_sub, invdat_sub$Bestånd != "Magnarpsvägen")
 
 m3 = lm(logantal~Behandling, data=invdat_sub) 
 anova(m3)
@@ -78,6 +78,10 @@ coefs = summary(m1)$coef
 exp(coefs[1,1]) # [1] 17.22322 Control
 exp(coefs[2,1]) # [1] 4.543839 Mowed
 exp(coefs[3,1]) # [1] 3.05623 HW
+
+exp(coefs[1,2]) # [1] 1.651856 SE Control
+exp(coefs[2,2]) # [1] 1.752671 SE Mowed
+exp(coefs[3,2]) # [1] 1.528341 SE HW
 
 #Area
 hist(invdat_sub$Area)
@@ -92,6 +96,16 @@ summary(m4) #25.2% of variance explained
 
 m1 = lm(invdat_sub$logarea~invdat_sub$Behandling-1)
 summary(m1)
+
+coefs = summary(m1)$coef
+exp(coefs[1,1]) # [1] 71.65774 Control
+exp(coefs[2,1]) # [1] 226.7512 Mowed
+exp(coefs[3,1]) # [1] 34.93985 HW
+
+exp(coefs[1,2]) # [1] 1.892355 SE Control
+exp(coefs[2,2]) # [1] 2.04032 SE Mowed
+exp(coefs[3,2]) # [1] 1.714391 SE HW
+
 
 #Plotting####
 library(ggplot2)
