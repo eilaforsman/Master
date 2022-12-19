@@ -121,7 +121,19 @@ VH_sub_HW$Kommun = factor(VH_sub_HW$Kommun, levels=c("Motala", "Helsingborg","Ve
 
 m2 = glm.nb(levande ~ Kommun, data=VH_sub_HW)
 anova(m2)
-summary(m2) #SE 6665??? because of 0?
+summary(m2) #log SE Vellinge 6665??? because of 0?
+
+coef = summary(m2)$coef
+
+exp(coef[1,1]) # [1] 3.333333 mean Motala
+exp(coef[2,1]) # [1] 1.35 mean Helsingborg
+exp(coef[3,1]) # [1] 1.241981e-09 mean Vellinge
+exp(coef[4,1]) # [1] 0.3 mean Gothenburg
+
+exp(coef[1,2]) # [1] 1.269107 SE Motala
+exp(coef[2,2]) # [1] 1.543291 SE Helsingborg
+exp(coef[3,2]) # [1] Inf SE Vellinge
+exp(coef[4,2]) # [1] 2.85092 SE Gothenburg
 
 ggplot(VH_sub_HW, aes(x=Kommun, y=levande, fill=Kommun)) +
   geom_boxplot() +
