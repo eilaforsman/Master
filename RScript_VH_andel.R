@@ -72,11 +72,81 @@ Xsq$residuals  # Pearson residuals
 Xsq$stdres     # standardized residuals
 
 
+#Difference between treatment####
 
+VH_sub$Treatment = c("Control","Control","Control","Heatweed","Heatweed",
+                     "Heatweed","Heatweed","Heatweed","Heatweed","Heatweed",
+                     "Heatweed","Heatweed","Heatweed","Heatweed")
 
+hist(VH_sub$levande)
+qqnorm(VH_sub$levande)
 
+m = glm.nb(levande ~ Treatment, data=VH_sub)
+summary(m)
 
+coef = summary(m)$coef
+exp(coef[1,1]) #8 mean Control
+exp(coef[2,1]) #0.3 mean HW
 
+exp(coef[1,2]) #1.3 SE Control
+exp(coef[2,2]) #1.4 SE HW
 
+#Plotting treatment####
+
+ggplot(VH_sub, aes(x=Treatment, y=levande, fill=Treatment)) +
+  geom_boxplot() +
+  scale_fill_grey() +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,8), expand = c(0,0)) +
+  labs(y="Number of shoots", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("VH_treat.png", plot = last_plot(), device = "png",
+       scale = 1, width = 13, height = 8,
+       dpi = 600)
+
+#Municipalites####
+
+VH_sub_HW$Kommun = c("Helsingborg","Helsingborg","Vellinge","Vellinge","Gothenburg",
+                     "Motala","Motala","Motala","Motala","Motala","Motala")
+
+VH_sub_HW$Kommun = factor(VH_sub_HW$Kommun, levels=c("Vellinge", "Helsingborg","Gothenburg","Motala"))
+
+m2 = glm.nb(levande ~ Kommun, data=VH_sub_HW)
+anova(m2)
+summary(m2) #same SE, z value and p value for all?
+
+hist(VH_sub_HW$levande)
+VH_sub_HW$log = log(VH_sub_HW$levande)
+hist(VH_sub_HW$log)
+
+m3 = lm(log ~ Kommun, data=VH_sub_HW)
+summary(m3)
+
+ggplot(VH_sub_HW, aes(x=Kommun, y=levande, fill=Kommun)) +
+  geom_boxplot() +
+  scale_fill_grey() +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,8), expand = c(0,0)) +
+  labs(y="Number of shoots", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("VH_Kommun.png", plot = last_plot(), device = "png",
+       scale = 1, width = 13, height = 8,
+       dpi = 600)
 
 
