@@ -117,18 +117,11 @@ ggsave("VH_treat.png", plot = last_plot(), device = "png",
 VH_sub_HW$Kommun = c("Helsingborg","Helsingborg","Vellinge","Vellinge","Gothenburg",
                      "Motala","Motala","Motala","Motala","Motala","Motala")
 
-VH_sub_HW$Kommun = factor(VH_sub_HW$Kommun, levels=c("Vellinge", "Helsingborg","Gothenburg","Motala"))
+VH_sub_HW$Kommun = factor(VH_sub_HW$Kommun, levels=c("Motala", "Helsingborg","Vellinge","Gothenburg"))
 
 m2 = glm.nb(levande ~ Kommun, data=VH_sub_HW)
 anova(m2)
-summary(m2) #same SE, z value and p value for all?
-
-hist(VH_sub_HW$levande)
-VH_sub_HW$log = log(VH_sub_HW$levande)
-hist(VH_sub_HW$log)
-
-m3 = lm(log ~ Kommun, data=VH_sub_HW)
-summary(m3)
+summary(m2) #SE 6665??? because of 0?
 
 ggplot(VH_sub_HW, aes(x=Kommun, y=levande, fill=Kommun)) +
   geom_boxplot() +
