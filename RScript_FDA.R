@@ -277,7 +277,6 @@ m9 = glm.nb(Antal ~ 1, data=datHW) #Fit model to HW data
 summary(m9)
 
 
-install.packages("performance")
 library(performance)
 r2(m7)
 
@@ -396,7 +395,7 @@ exp(coef4[1,2] + coef4[4,2]) # [1] 3.949547 SE M
 Meantot$Kommun = c("Helsingborg", "Helsingborg", "Helsingborg", "Motala",
                    "Motala","Motala","Motala","Motala","Motala","Motala",
                    "Göteborg", "Vellinge","Vellinge","Vellinge")
-meantot_sub = subset(Meantot, Meantot$newprov != "Helsingborg_kontroll" & Meantot$newprov != "Motala_kontroll" & Meantot$newprov != "Vellinge_kontroll")
+meantot_sub = subset(Meantot, Meantot$newprov != "Helsingborg_control" & Meantot$newprov != "Motala_control" & Meantot$newprov != "Vellinge_control")
 meantot_sub$Kommun = as.factor(meantot_sub$Kommun)
 str(meantot_sub)
 
@@ -405,6 +404,7 @@ meantot_sub$Kommun = factor(meantot_sub$Kommun, levels=c("Vellinge", "Göteborg"
 
 hist(meantot_sub$mean_sample)
 meantot_sub$logsample = log(meantot_sub$mean_sample)
+hist(meantot_sub$logsample)
 
 mm2 = lm(logsample ~ Kommun, data=meantot_sub) #Fit model to log data 
 summary(mm2) 
@@ -434,7 +434,7 @@ ggplot(meantot_sub, aes(x=Kommun, y=mean_sample, fill=Kommun)) +
   theme_classic() + 
   scale_y_continuous(limits = c(0,400), expand = c(0,0)) +
   labs(y="Number of cells", x="", 
-       title = "Number of live cells per sample from each municipality") +
+       title = "") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),
         plot.title = element_text (hjust = 0.5),
@@ -449,13 +449,17 @@ ggsave("Kommun_prov_boxplot.png", plot = last_plot(), device = "png",
 
 #Plotting municipalities micrograph
 
-ggplot(meantot_sub, aes(x=Kommun, y=mean_tot, fill=Kommun)) +
+meantot_sub$Kommun = gsub("Göteborg","Gothenburg", meantot_sub$Kommun)
+meantot_sub$Kommun = factor(meantot_sub$Kommun, levels=c("Vellinge", "Gothenburg", "Helsingborg", "Motala"))
+
+
+ggplot(meantot_sub, aes(x=Kommun, y=logsample, fill=Kommun)) +
   geom_boxplot() +
   scale_fill_grey() +
   theme_classic() + 
-  scale_y_continuous(limits = c(0,75), expand = c(0,0)) +
-  labs(y="Number of cells", x="", 
-       title = "Number of live cells per micrograph from each municipality") +
+  scale_y_continuous(limits = c(-5,10), expand = c(0,0)) +
+  labs(y="Number of cells (log)", x="", 
+       title = "") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),
         plot.title = element_text (hjust = 0.5),
@@ -471,4 +475,49 @@ ggsave("Kommun_bild_boxplot.png", plot = last_plot(), device = "png",
 
 #Structure####
 
-plot(Antal ~ Struktur, data=datC)
+plot(Antal ~ Struktur, data=datHW)
+
+HW_str <- subset(datHW, datHW$Struktur != "pith, cortex")
+
+HW_str$Struktur <- as.factor(HW_str$Struktur)
+
+str(HW_str)
+summary(HW_str)
+
+hist(HW_str$Antal)
+
+mod1 = glm.nb(Antal ~ Struktur, data=HW_str)
+summary(mod1) # sig dif betweeen structures, vt fewest cells, cortex most
+
+coef5 = summary(mod1)$coef
+
+exp(coef5[1,1]) # [1] 28.75203 mean cortex
+exp(coef5[2,1]) # [1] 1.51495 mean pith
+exp(coef5[3,1]) # [1] 0.009019312 mean vt
+
+exp(coef5[1,2]) # [1] 1.086046 SE cortex
+exp(coef5[2,2]) # [1] 1.185334 SE pith
+exp(coef5[3,2]) # [1] 1.141091 SE vt
+
+#Plotting str####
+
+ggplot(HW_str, aes(x=Struktur, y=Antal, fill=Struktur)) +
+  geom_boxplot() +
+  scale_fill_grey() +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,500), expand = c(0,0)) +
+  labs(y="Number of cells", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 28, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("STR_boxplot.png", plot = last_plot(), device = "png",
+       scale = 1, width = 13, height = 8,
+       dpi = 600)
+
+
