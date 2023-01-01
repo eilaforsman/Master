@@ -368,12 +368,12 @@ exp(coef2[4,1]) #4.520792 mean Vellinge
 
 datHW$Kommun = factor(datHW$Kommun, levels=c("Vellinge", "Göteborg", "Helsingborg", "Motala"))
 
-mm = glmmTMB(Antal ~ Kommun + (1|Prov), family="nbinom1", datHW)
+mm = glmmTMB(Antal ~ Kommun + (1|Lokal/Prov), family="nbinom1", datHW)
 summary(mm) #Fit model where site and sample are random factors
 #Vellinge fewest cells, differ from Motala.
 
-mm2 = glmmTMB(Antal ~ Kommun + (1|Prov), family="nbinom1", datC)
-summary(mm2)
+mm2 = glmmTMB(Antal ~ Kommun + (1|Lokal/Prov), family="nbinom1", datC)
+summary(mm2) #Model difference between municipalities in control site, no difference
 
 boxplot(resid(mm) ~ datHW$Kommun)
 
@@ -492,14 +492,30 @@ summary(mod1) # sig dif betweeen structures, vt fewest cells, cortex most
 coef5 = summary(mod1)$coef
 
 exp(coef5[1,1]) # [1] 28.75203 mean cortex
-exp(coef5[2,1]) # [1] 1.51495 mean pith
-exp(coef5[3,1]) # [1] 0.009019312 mean vt
+exp(coef5[2,1] + coef5[1,1]) # [1] 43.55789 mean pith
+exp(coef5[3,1] + coef5[1,1]) # [1] 0.2593235 mean vt
 
 exp(coef5[1,2]) # [1] 1.086046 SE cortex
-exp(coef5[2,2]) # [1] 1.185334 SE pith
-exp(coef5[3,2]) # [1] 1.141091 SE vt
+exp(coef5[2,2] + coef5[1,2]) # [1] 1.287328 SE pith
+exp(coef5[3,2] + coef5[1,2]) # [1] 1.239278 SE vt
+
+mod2 = glmmTMB(Antal ~ Struktur + (1|Lokal/Prov), family="nbinom1", data=HW_str)
+summary(mod2) #sig dif between str, takes site and sample into account
+
+coef6 = summary(mod2)$coef
+coef6 = coef6[["cond"]]
+
+exp(coef6[1,1]) # [1] 5.541543 mean cortex
+exp(coef6[1,1] + coef6[2,1]) # [1] 8.660902
+exp(coef6[1,1] + coef6[3,1]) # [1] 0.6752093
+
+exp(coef6[1,2]) #[1] 1.368077 SE cortex
+exp(coef6[1,2] + coef6[2,2]) # [1] 1.462484 SE pith
+exp(coef6[1,2] + coef6[3,2]) #[1] 1.55402 SE vt
 
 #Plotting str####
+
+plot(Antal ~ Struktur, data=HW_str)
 
 ggplot(HW_str, aes(x=Struktur, y=Antal, fill=Struktur)) +
   geom_boxplot() +
