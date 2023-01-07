@@ -27,7 +27,7 @@ summary(dataFDA)
 
 library(plyr)
 dataFDA_sub <- subset(dataFDA, Lokal != "H_Pålsjö_efter_HW") #Remove "efter_HW" because its a different treatment
-
+str(dataFDA_sub)
 head(dataFDA_sub)
 
 #install.packages("stringr")
@@ -43,6 +43,7 @@ dataFDA_sub$ID_spec <- ID_split$V1
 paste(dataFDA_sub$Lokal, dataFDA_sub$ID_spec, sep ="_")
 dataFDA_sub$Prov<-paste(dataFDA_sub$Lokal, dataFDA_sub$ID_spec, sep ="_")
 head(dataFDA_sub)
+
 #Created new column of sample without sample ID
 
 Prov<-ddply(dataFDA_sub, "Prov", summarise, mean_antal=mean(Antal))
@@ -487,7 +488,9 @@ summary(HW_str)
 hist(HW_str$Antal)
 
 mod1 = glm.nb(Antal ~ Struktur, data=HW_str)
-summary(mod1) # sig dif betweeen structures, vt fewest cells, cortex most
+anova(mod1)
+summary(mod1) # sig dif betweeen structures, vt fewest cells, pith most
+
 
 coef5 = summary(mod1)$coef
 
@@ -535,5 +538,89 @@ ggplot(HW_str, aes(x=Struktur, y=Antal, fill=Struktur)) +
 ggsave("STR_boxplot.png", plot = last_plot(), device = "png",
        scale = 1, width = 13, height = 8,
        dpi = 600)
+
+#Difference in control vs HW and structure#####
+
+#data exploring 
+data = dataFDA_sub 
+
+data = subset(dataFDA_sub, dataFDA_sub$Struktur!="pith, cortex")
+#Why is "pith, cortex" still included in graphs and tapply?
+
+data$Struktur = as.factor(data$Struktur)
+data$Behandling = as.factor(data$Behandling)
+str(data)
+
+plot(data$Struktur)
+hist(data$Antal)
+
+means = tapply(data$Antal, list(data$Struktur, data$Behandling), mean)
+
+means = na.omit(means)
+
+se = tapply(data$Antal, 
+            list(data$Struktur, data$Behandling), 
+            function(x) sd(x)/sqrt(sum(!is.na(x))))
+se = na.omit(se)
+
+colMeans(means)
+#Control Heatweed 
+#56.03020 24.18975 
+
+rowMeans(means)
+#  cortex            pith vascular tissue 
+#48.7601593      71.3133389       0.2564223
+
+colMeans(se)
+# Control Heatweed 
+#2.515320 1.730181 
+
+rowMeans(se)
+#   cortex            pith vascular tissue 
+#2.17440696      4.10192672      0.09191741 
+
+#model fitting
+mod3 = glm.nb(Antal ~ Behandling*Struktur, data=data)
+anova(mod3)
+summary(mod3)
+
+mod4 = glm.nb(Antal ~ Behandling*Struktur -1, data=data)
+anova(mod4)
+summary(mod4) #?? HELP what happened to cortex?
+
+data$log = log(data$Antal +1) #Try to get normal data for 2-way anova
+model = aov(log ~ Behandling*Struktur, data=data)
+summary(model)
+
+model2 = glmmTMB(log ~ Behandling*Struktur + (1|Lokal), data=data)
+summary(model2)
+
+#Plotting
+
+library(dplyr)
+#data %>% 
+  #group_by(Struktur, Behandling) %>% 
+  #summarise(data_groups = mean(Antal)) -> data2
+
+data %>% 
+  ggplot() +
+  aes(x = Struktur, color = Behandling, group = Behandling, y = Antal) +
+  stat_summary(fun = mean, geom = "point") +
+  stat_summary(fun = mean, geom = "line") +
+  theme_classic() +
+  scale_color_grey() +
+  labs(y="Mean number of cells", x="", 
+       title = "", color = "Treatment") +
+  theme(text = element_text(size = 28, family="Times"),
+        legend.position = c(0.9,0.9),
+        legend.title = element_text("Times"),
+        axis.text.x = element_text(size = 28, color = "black"))
+
+ggsave("str_treat_interaction.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
+
+
+
 
 
