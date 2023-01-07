@@ -31,12 +31,10 @@ VH_sub$Plats = gsub("Flommen kontroll","Vellinge control", VH_sub$Plats)
 VH_sub$Plats = gsub("Motala kontroll","Motala control", VH_sub$Plats)
 
 #Plotting live samples####
+library(ggplot2)
 
 ggplot(VH_sub, aes(x=reorder(Plats, Grupp), y=Procent.levande)) +
   geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
-  #geom_errorbar(data=Meantot, aes(ymin= mean_sample - se, 
-                                  #ymax=mean_sample + se),
-                #width = 0.13, alpha = 1, position=position_dodge(0.75)) +
   theme_classic() + 
   scale_y_continuous(limits = c(0,110), expand = c(0,0)) +
   labs(y="Proportion of shoots emerged (%)", x="", 
@@ -73,6 +71,10 @@ Xsq$stdres     # standardized residuals
 
 
 #Difference between treatment####
+library(glmmTMB)
+library(lme4)
+library(lmerTest)
+library(MASS)
 
 VH_sub$Treatment = c("Control","Control","Control","Heatweed","Heatweed",
                      "Heatweed","Heatweed","Heatweed","Heatweed","Heatweed",
@@ -119,21 +121,30 @@ VH_sub_HW$Kommun = c("Helsingborg","Helsingborg","Vellinge","Vellinge","Gothenbu
 
 VH_sub_HW$Kommun = factor(VH_sub_HW$Kommun, levels=c("Motala", "Helsingborg","Vellinge","Gothenburg"))
 
-m2 = glm.nb(levande ~ Kommun, data=VH_sub_HW)
+hist(VH_sub_HW$levande)
+
+m2 = glm(levande ~ Kommun, data=VH_sub_HW)
 anova(m2)
-summary(m2) #log SE Vellinge 6665??? because of 0?
+summary(m2) #Not great model fit but with glm.nb or poisson family 
+# the Vellinge estimates are weird
 
-coef = summary(m2)$coef
+#Supress intercept to get estimated means and se
+m3 = glm(levande ~ Kommun -1, data=VH_sub_HW)
+summary(m3)
 
-exp(coef[1,1]) # [1] 3.333333 mean Motala
-exp(coef[2,1]) # [1] 1.35 mean Helsingborg
-exp(coef[3,1]) # [1] 1.241981e-09 mean Vellinge
-exp(coef[4,1]) # [1] 0.3 mean Gothenburg
+#If nb is used because then log link: 
+#coef = summary(m2)$coef
 
-exp(coef[1,2]) # [1] 1.269107 SE Motala
-exp(coef[2,2]) # [1] 1.543291 SE Helsingborg
-exp(coef[3,2]) # [1] Inf SE Vellinge
-exp(coef[4,2]) # [1] 2.85092 SE Gothenburg
+#exp(coef[2,1]) # [1] 1.35 mean Helsingborg
+#exp(coef[3,1]) # [1] 1.241981e-09 mean Vellinge
+#exp(coef[4,1]) # [1] 0.3 mean Gothenburg
+
+#exp(coef[1,2]) # [1] 1.269107 SE Motala
+#exp(coef[2,2]) # [1] 1.543291 SE Helsingborg
+#exp(coef[3,2]) # [1] Inf SE Vellinge
+#exp(coef[4,2]) # [1] 2.85092 SE Gothenburg
+
+#Plotting municipalities
 
 ggplot(VH_sub_HW, aes(x=Kommun, y=levande, fill=Kommun)) +
   geom_boxplot() +
