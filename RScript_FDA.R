@@ -55,21 +55,6 @@ dataFDA_sub$newprov <- substr(dataFDA_sub$Prov, 1, nchar(dataFDA_sub$Prov) - 2) 
 Meantot<-ddply(dataFDA_sub, "newprov", summarise, mean_tot=mean(Antal)) #Calculate mean number per site
 Meantot$order <- c(4,5,1,9,10,11,12,13,14,2,8,6,7,3) #Set order of sites for later plotting
 
-#Basic Plotting####
-
-library(plyr)
-barplot(mean_antal~Lokal,las=1, data=mean_LokalFDA,srt=35)
-
-axis(side=1,labels = FALSE)
-
-barplot(mean_antal~Lokal,data=mean_LokalFDA, xaxt="n")
-text(x = 1:length(levels(mean_LokalFDA$Lokal)),
-     y = par("usr")[3] - 0.45,
-     labels = levels(mean_LokalFDA$Lokal),
-     xpd = NA,
-     ## Rotate the labels by 35 degrees.
-     srt = 50,
-     cex = 1.0)
 
 #Data exploring####
 
