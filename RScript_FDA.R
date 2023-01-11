@@ -539,6 +539,7 @@ str(data)
 plot(data$Struktur)
 hist(data$Antal)
 
+
 means = tapply(data$Antal, list(data$Struktur, data$Behandling), mean)
 
 means = na.omit(means)
@@ -571,14 +572,27 @@ summary(mod3)
 
 mod4 = glm.nb(Antal ~ Behandling*Struktur -1, data=data)
 anova(mod4)
-summary(mod4) #?? HELP what happened to cortex?
+summary(mod4) #?? HELP what happened to cortex? 
+#Not normal data might be a problem
 
-data$log = log(data$Antal +1) #Try to get normal data for 2-way anova
+data$log = log(data$Antal) #Try to get normal data for 2-way anova
+data$log = gsub("-Inf", 0, data$log) #Exchange -Inf with 0
+data$log[data$log == 0] = NA #Set 0 values to NA
+data = na.omit(data) #Remove rows with NA 
+
+data$log = as.numeric(data$log)
+hist(data$log)  
+
+#Fit model with 2-way anova to normal data
 model = aov(log ~ Behandling*Struktur, data=data)
 summary(model)
 
-model2 = glmmTMB(log ~ Behandling*Struktur + (1|Lokal), data=data)
+model2 = glmmTMB(log ~ Behandling*Struktur, data=data)
 summary(model2)
+
+#Take random factors into account to avoid pseudo replication
+model3 = glmmTMB(log ~ Behandling*Struktur + (1|Lokal/Prov), data=data)
+summary(model3)
 
 #Plotting
 
@@ -605,7 +619,101 @@ ggsave("str_treat_interaction.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
 
+#Treatment: Struktur without vascular tissue
 
+#data exploring 
+dat = dataFDA_sub 
+
+dat = subset(dataFDA_sub, dataFDA_sub$Struktur!="pith, cortex")
+dat = subset(dat, dat$Struktur!="vascular tissue")
+
+#Why is "pith, cortex" still included in graphs and tapply?
+
+dat$Struktur = as.factor(dat$Struktur)
+dat$Behandling = as.factor(dat$Behandling)
+str(dat)
+
+plot(dat$Struktur)
+hist(dat$Antal)
+
+means = tapply(dat$Antal, list(dat$Struktur, dat$Behandling), mean)
+
+means = na.omit(means)
+
+se = tapply(dat$Antal, 
+            list(dat$Struktur, dat$Behandling), 
+            function(x) sd(x)/sqrt(sum(!is.na(x))))
+se = na.omit(se)
+
+colMeans(means)
+#Control Heatweed 
+#83.91854 36.15496 
+
+rowMeans(means)
+# cortex     pith 
+#48.76016 71.31334
+
+colMeans(se)
+# Control Heatweed 
+#3.708196 2.568138  
+
+rowMeans(se)
+#   cortex     pith 
+# 2.174407 4.101927
+
+#model fitting
+hist(dat$Antal)
+
+mod3 = glm.nb(Antal ~ Behandling*Struktur, data=dat)
+anova(mod3)
+summary(mod3)
+
+mod4 = glm.nb(Antal ~ Behandling*Struktur -1, data=dat)
+anova(mod4)
+summary(mod4) #?? HELP 
+
+#Try to get normal data for 2-way anova
+dat$log = log(dat$Antal) 
+hist(dat$log)  
+
+dat$log = gsub("-Inf", 0, dat$log)
+dat$log[dat$log == 0] = NA
+
+dat = na.omit(dat)
+hist(dat$log)
+
+#2-way ANOVA with logged data for normal distribution
+model = aov(log ~ Behandling*Struktur, data=dat)
+summary(model)
+
+model2 = glmmTMB(log ~ Behandling*Struktur, data=dat)
+summary(model2)
+
+#Take random factors into account to avoid pseudo replication
+model3 = glmmTMB(log ~ Behandling*Struktur + (1|Lokal/Prov), data=data)
+summary(model3)
+
+#Plotting
+
+library(dplyr)
+
+dat %>% 
+  ggplot() +
+  aes(x = Struktur, color = Behandling, group = Behandling, y = Antal) +
+  stat_summary(fun = mean, geom = "point") +
+  stat_summary(fun = mean, geom = "line") +
+  theme_classic() +
+  scale_color_grey() +
+  labs(y="Mean number of cells", x="", 
+       title = "", color = "Treatment") +
+  theme(text = element_text(size = 28, family="Times"),
+        legend.position = c(0.9,0.9),
+        legend.title = element_text("Times"),
+        axis.text.x = element_text(size = 28, color = "black"))
+
+ggsave("str_treat_pVSc.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
 
 
 
