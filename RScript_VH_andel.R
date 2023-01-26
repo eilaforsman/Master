@@ -51,24 +51,18 @@ ggsave("VH_live.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
 
-#Chi-2 testing####
+#Difference in sprouting between sites####
 
 VH_sub_HW = subset(VH_sub, VH_sub$Plats != "Helsingborg control" &
                 VH_sub$Plats != "Vellinge control" &
                 VH_sub$Plats != "Motala control")
 
-chi = subset(VH_sub_HW, select=c(Plats, levande))
-View(chi)
-str(chi)
-chi$Plats = as.factor(chi$Plats)
-chi$exp = c(rep(4.7, length(chi$levande)))
+#Mean then create deviance vector and do one sample t test
 
-Xsq <- chisq.test(chi$Plats, chi$levande)  # Prints test summary
-Xsq$observed   # observed counts (same as M)
-Xsq$expected   # expected counts under the null
-Xsq$residuals  # Pearson residuals
-Xsq$stdres     # standardized residuals
+deviance = VH_sub_HW$levande - mean(VH_sub_HW$levande)
 
+t.test(deviance, mu = 0, alternative = "two.sided")
+#t = 3.2749e-16, df = 10, p-value = 1
 
 #Difference between treatment####
 library(glmmTMB)
@@ -116,24 +110,21 @@ ggsave("VH_treat.png", plot = last_plot(), device = "png",
 
 #Municipalites####
 
+#Kruskal wallis!!!!
+
 VH_sub_HW$Kommun = c("Helsingborg","Helsingborg","Vellinge","Vellinge","Gothenburg",
                      "Motala","Motala","Motala","Motala","Motala","Motala")
 
-VH_sub_HW$Kommun = factor(VH_sub_HW$Kommun, levels=c("Motala", "Helsingborg","Vellinge","Gothenburg"))
+VH_sub_HW$Kommun = factor(VH_sub_HW$Kommun, levels=c("Vellinge", "Gothenburg","Motala","Helsingborg"))
 
 hist(VH_sub_HW$levande)
 
-m2 = glm(levande ~ Kommun, data=VH_sub_HW)
-anova(m2)
-summary(m2) #Not great model fit but with glm.nb or poisson family 
-# the Vellinge estimates are weird
+m2 = kruskal.test(levande ~ Kommun, data=VH_sub_HW)
+m2 #Kruskal-Wallis chi-squared = 5.8605, df = 3, p-value = 0.1186
 
-#Supress intercept to get estimated means and se
-m3 = glm(levande ~ Kommun -1, data=VH_sub_HW)
+m3 = glm(levande ~ Kommun, data=VH_sub_HW, family="nbinom1")
 summary(m3)
 
-#If nb is used because then log link: 
-#coef = summary(m2)$coef
 
 #exp(coef[2,1]) # [1] 1.35 mean Helsingborg
 #exp(coef[3,1]) # [1] 1.241981e-09 mean Vellinge

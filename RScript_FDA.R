@@ -145,6 +145,9 @@ boxplot(resid(m7) ~ dataFDA_sub$Behandling)
 
 plot(Antal ~ Behandling, data=dataFDA_sub) #Visualize data distribution between treatments
 
+m10 = glmmTMB(Antal ~ Behandling, family="nbinom1", data=dataFDA_sub) #Trying wothout random effects to see how they affect the result
+summary(m10)
+
 #Results####
 
 coef = summary(m7)
@@ -376,8 +379,7 @@ exp(coef4[1,2] + coef4[3,2]) # [1] 4.608651 SE H
 exp(coef4[1,2] + coef4[4,2]) # [1] 3.949547 SE M
 
 
-
-#Unnecessary? sample modelling
+#Sample modelling
 Meantot$Kommun = c("Helsingborg", "Helsingborg", "Helsingborg", "Motala",
                    "Motala","Motala","Motala","Motala","Motala","Motala",
                    "Göteborg", "Vellinge","Vellinge","Vellinge")
@@ -439,12 +441,12 @@ meantot_sub$Kommun = gsub("Göteborg","Gothenburg", meantot_sub$Kommun)
 meantot_sub$Kommun = factor(meantot_sub$Kommun, levels=c("Vellinge", "Gothenburg", "Helsingborg", "Motala"))
 
 
-ggplot(meantot_sub, aes(x=Kommun, y=logsample, fill=Kommun)) +
+ggplot(meantot_sub, aes(x=Kommun, y=mean_tot, fill=Kommun)) +
   geom_boxplot() +
   scale_fill_grey() +
   theme_classic() + 
-  scale_y_continuous(limits = c(-5,10), expand = c(0,0)) +
-  labs(y="Number of cells (log)", x="", 
+  scale_y_continuous(limits = c(-5,60), expand = c(0,0)) +
+  labs(y="Number of cells", x="", 
        title = "") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),
@@ -474,8 +476,7 @@ hist(HW_str$Antal)
 
 mod1 = glm.nb(Antal ~ Struktur, data=HW_str)
 anova(mod1)
-summary(mod1) # sig dif betweeen structures, vt fewest cells, pith most
-
+summary(mod1) # sig dif betweeen structures, vt fewest cells, pith most, not great model fit
 
 coef5 = summary(mod1)$coef
 
@@ -494,12 +495,23 @@ coef6 = summary(mod2)$coef
 coef6 = coef6[["cond"]]
 
 exp(coef6[1,1]) # [1] 5.541543 mean cortex
-exp(coef6[1,1] + coef6[2,1]) # [1] 8.660902
-exp(coef6[1,1] + coef6[3,1]) # [1] 0.6752093
+exp(coef6[1,1] + coef6[2,1]) # [1] 8.660902 mean pith
+exp(coef6[1,1] + coef6[3,1]) # [1] 0.6752093 mean vt
 
 exp(coef6[1,2]) #[1] 1.368077 SE cortex
 exp(coef6[1,2] + coef6[2,2]) # [1] 1.462484 SE pith
 exp(coef6[1,2] + coef6[3,2]) #[1] 1.55402 SE vt
+
+#Means don't make sense should be 20 to 80 something per micrograph
+
+kruskal.test(Antal ~ Struktur, data=HW_str)
+#Kruskal-Wallis chi-squared = 638.68, df = 2, p-value < 2.2e-16
+#sig dif between str
+
+str_means = ddply(HW_str, "Struktur", summarize, 
+                          mean = mean(Antal),
+                          sd = sd(Antal),
+                          se = sd /sqrt(length(Antal)))
 
 #Plotting str####
 
@@ -530,7 +542,6 @@ ggsave("STR_boxplot.png", plot = last_plot(), device = "png",
 data = dataFDA_sub 
 
 data = subset(dataFDA_sub, dataFDA_sub$Struktur!="pith, cortex")
-#Why is "pith, cortex" still included in graphs and tapply?
 
 data$Struktur = as.factor(data$Struktur)
 data$Behandling = as.factor(data$Behandling)
@@ -538,7 +549,6 @@ str(data)
 
 plot(data$Struktur)
 hist(data$Antal)
-
 
 means = tapply(data$Antal, list(data$Struktur, data$Behandling), mean)
 
@@ -565,34 +575,23 @@ rowMeans(se)
 #   cortex            pith vascular tissue 
 #2.17440696      4.10192672      0.09191741 
 
-#model fitting
-mod3 = glm.nb(Antal ~ Behandling*Struktur, data=data)
-anova(mod3)
-summary(mod3)
+#mann whitney U compare seperatly
 
-mod4 = glm.nb(Antal ~ Behandling*Struktur -1, data=data)
-anova(mod4)
-summary(mod4) #?? HELP what happened to cortex? 
-#Not normal data might be a problem
+d = subset(data, data$Struktur =="cortex")
+mu = wilcox.test(d$Antal ~ d$Behandling)
+mu # W = 481916, p-value < 2.2e-16
 
-data$log = log(data$Antal) #Try to get normal data for 2-way anova
-data$log = gsub("-Inf", 0, data$log) #Exchange -Inf with 0
-data$log[data$log == 0] = NA #Set 0 values to NA
-data = na.omit(data) #Remove rows with NA 
+d = subset(data, data$Struktur =="pith")
+mu = wilcox.test(d$Antal ~ d$Behandling)
+mu # W = 56851, p-value < 2.2e-16
 
-data$log = as.numeric(data$log)
-hist(data$log)  
+d = subset(data, data$Struktur =="vascular tissue")
+mu = wilcox.test(d$Antal ~ d$Behandling)
+mu # W = 41317, p-value = 0.7502
 
-#Fit model with 2-way anova to normal data
-model = aov(log ~ Behandling*Struktur, data=data)
-summary(model)
-
-model2 = glmmTMB(log ~ Behandling*Struktur, data=data)
-summary(model2)
-
-#Take random factors into account to avoid pseudo replication
-model3 = glmmTMB(log ~ Behandling*Struktur + (1|Lokal/Prov), data=data)
-summary(model3)
+mu_treat = wilcox.test(data$Antal ~ data$Behandling)
+mu_treat # W = 1719611, p-value < 2.2e-16
+summary(mu_treat)
 
 #Plotting
 
@@ -619,101 +618,6 @@ ggsave("str_treat_interaction.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
 
-#Treatment: Struktur without vascular tissue
-
-#data exploring 
-dat = dataFDA_sub 
-
-dat = subset(dataFDA_sub, dataFDA_sub$Struktur!="pith, cortex")
-dat = subset(dat, dat$Struktur!="vascular tissue")
-
-#Why is "pith, cortex" still included in graphs and tapply?
-
-dat$Struktur = as.factor(dat$Struktur)
-dat$Behandling = as.factor(dat$Behandling)
-str(dat)
-
-plot(dat$Struktur)
-hist(dat$Antal)
-
-means = tapply(dat$Antal, list(dat$Struktur, dat$Behandling), mean)
-
-means = na.omit(means)
-
-se = tapply(dat$Antal, 
-            list(dat$Struktur, dat$Behandling), 
-            function(x) sd(x)/sqrt(sum(!is.na(x))))
-se = na.omit(se)
-
-colMeans(means)
-#Control Heatweed 
-#83.91854 36.15496 
-
-rowMeans(means)
-# cortex     pith 
-#48.76016 71.31334
-
-colMeans(se)
-# Control Heatweed 
-#3.708196 2.568138  
-
-rowMeans(se)
-#   cortex     pith 
-# 2.174407 4.101927
-
-#model fitting
-hist(dat$Antal)
-
-mod3 = glm.nb(Antal ~ Behandling*Struktur, data=dat)
-anova(mod3)
-summary(mod3)
-
-mod4 = glm.nb(Antal ~ Behandling*Struktur -1, data=dat)
-anova(mod4)
-summary(mod4) #?? HELP 
-
-#Try to get normal data for 2-way anova
-dat$log = log(dat$Antal) 
-hist(dat$log)  
-
-dat$log = gsub("-Inf", 0, dat$log)
-dat$log[dat$log == 0] = NA
-
-dat = na.omit(dat)
-hist(dat$log)
-
-#2-way ANOVA with logged data for normal distribution
-model = aov(log ~ Behandling*Struktur, data=dat)
-summary(model)
-
-model2 = glmmTMB(log ~ Behandling*Struktur, data=dat)
-summary(model2)
-
-#Take random factors into account to avoid pseudo replication
-model3 = glmmTMB(log ~ Behandling*Struktur + (1|Lokal/Prov), data=data)
-summary(model3)
-
-#Plotting
-
-library(dplyr)
-
-dat %>% 
-  ggplot() +
-  aes(x = Struktur, color = Behandling, group = Behandling, y = Antal) +
-  stat_summary(fun = mean, geom = "point") +
-  stat_summary(fun = mean, geom = "line") +
-  theme_classic() +
-  scale_color_grey() +
-  labs(y="Mean number of cells", x="", 
-       title = "", color = "Treatment") +
-  theme(text = element_text(size = 28, family="Times"),
-        legend.position = c(0.9,0.9),
-        legend.title = element_text("Times"),
-        axis.text.x = element_text(size = 28, color = "black"))
-
-ggsave("str_treat_pVSc.png", plot = last_plot(), device = "png",
-       scale = 1, width = 10, height = 8,
-       dpi = 600)
 
 
 

@@ -47,6 +47,13 @@ hist(invdat_sub$Höjd)
 m1 = lm(invdat_sub$Höjd~invdat_sub$Behandling-1)
 summary(m1)
 
+m = aov(invdat_sub$Höjd~invdat_sub$Behandling)
+summary(m)
+
+library(multcomp)
+
+TukeyHSD(m, "invdat_sub$Behandling", ordered=FALSE, conf.level = 0.95)
+
 #Mean diameter
 m2 = lm(invdat_sub$Medel.diameter~invdat_sub$Behandling)
 anova(m2)
@@ -56,6 +63,11 @@ hist(invdat_sub$Medel.diameter)
 
 m1 = lm(invdat_sub$Medel.diameter~invdat_sub$Behandling-1)
 summary(m1)
+
+m2 = aov(invdat_sub$Medel.diameter~invdat_sub$Behandling)
+summary(m2)
+
+TukeyHSD(m2, "invdat_sub$Behandling", ordered=FALSE, conf.level = 0.95)
 
 #Mean number
 library(lme4)

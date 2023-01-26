@@ -1,5 +1,5 @@
 rm(list = ls())
-
+list.files ()
 
 #Stapeldiagram medelantal per plats, medel på enskilda snitten först 
 #Antal HW vs kontroll
@@ -7,24 +7,20 @@ rm(list = ls())
 #Nested HW vs kontroll och skillnad mellan lokal
 #Medelvärde antal per lokal (Pålsjö 1,2,3,4,5)
 #5vs6ggr
+#Pålsjö efter HW
 #Skillnad i död/levande eller antal mellan strukturer
 
-#Basic data exploration####
+#Basic####
 getwd()
 
 setwd("~/Documents/Documents/R/Master/Master")
-list.files ()
 
 dataPI <- read.csv("dataPI.csv", sep=";")
 head(dataPI)
 str(dataPI)
-
-#Specify factors
 dataPI$Struktur <- as.factor(dataPI$Struktur)
 dataPI$Lokal <- as.factor(dataPI$Lokal)
 dataPI$Kommun <- as.factor(dataPI$Kommun)
-dataPI$Behandling <- as.factor(dataPI$Behandling)
-
 table(dataPI$Lokal)
 summary(dataPI)
 
@@ -42,24 +38,22 @@ library(stringr)
 ID_split <- as.data.frame(str_split_fixed(dataPI_sub$ID, "_", 2))
 head(ID_split)
 
-#Create coloumn for samples
+
 dataPI_sub$ID_spec <- ID_split$V1
 paste(dataPI_sub$Lokal, dataPI_sub$ID_spec, sep ="_")
 dataPI_sub$Prov<-paste(dataPI_sub$Lokal, dataPI_sub$ID_spec, sep ="_")
 head(dataPI_sub)
 
-#Created new df of mean cells per sample 
+#Created new column of sample without sample ID
 
-Prov<-ddply(dataPI_sub, "Prov", summarise, mean_antal=mean(Antal)) #Mean cells per sample
+Prov<-ddply(dataPI_sub, "Prov", summarise, mean_antal=mean(Antal))
 head(Prov)
-
-#Calculate mean number per site
 
 nchar(dataPI_sub$Prov)
 dataPI_sub$newprov <- substr(dataPI_sub$Prov, 1, nchar(dataPI_sub$Prov) - 2) #New column of sites
 
-Meantot<-ddply(dataPI_sub, "newprov", summarise, mean_tot=mean(Antal)) 
-Meantot$order <- c(4,5,1,8,10,11,12,13,14,9,2,6,7,3) #Set order of sites for later plotting
+Meantot<-ddply(dataPI_sub, "newprov", summarise, mean_tot=mean(Antal)) #Calculate mean number per site
+Meantot$order <- c(4,5,1,8,10,11,12,13,14,9,3,6,7,2) #Set order of sites for later plotting
 
 
 #Data exploring####
@@ -115,7 +109,7 @@ summary(m2) #Fitted a generalized linear model with negative binomial distributi
 #to account for overdispersion. Big difference but doesn't take site into account
 
 1-(m2$deviance/m2$null.deviance)
-#[1] 0.02115497
+#[1] 0.04534703
 
 m3 = glmer(dataPI_sub$Antal ~ dataPI_sub$Behandling + (1|dataPI_sub$Lokal), family="poisson", data=dataPI_sub)
 
@@ -146,18 +140,20 @@ summary(m6)
 summary(m7)#Includes site and sample as random factor and corrects for overdispersion, 
 #correct data distribution
 
-#No difference between control and Heatweed
-
+boxplot(resid(m6) ~ dataPI_sub$Behandling)
 boxplot(resid(m7) ~ dataPI_sub$Behandling)
 
 plot(Antal ~ Behandling, data=dataPI_sub) #Visualize data distribution between treatments
+
+m10 = glmmTMB(Antal ~ Behandling, family="nbinom1", data=dataPI_sub) #Trying wothout random effects to see how they affect the result
+summary(m10)
 
 #Results####
 
 coef = summary(m7)
 coef = coef[["coefficients"]][["cond"]]
-exp(coef[1,1]) #[1] 0.01823506
-exp(coef[1,1] + coef[2,1]) #[1] 0.0962816
+exp(coef[1,1])
+exp(coef[1,1] + coef[2,1])
 
 #Create data frame with statistics for each treatment
 stats = ddply(dataPI_sub, "Behandling", summarize, 
@@ -169,10 +165,12 @@ stats = ddply(dataPI_sub, "Behandling", summarize,
 
 #Fancy plotting######
 
+#install.packages("ggplot2")
 library(ggplot2)
 
 head(Meantot)
 par(mfrow=c(1,1))
+?ggplot()
 
 #Mean number of live cells per micrograph####
 
@@ -181,7 +179,6 @@ PIMeans<-ddply(dataPI_sub,"Lokal", summarize, N=length(Antal),
                 sd.PI=sd(na.omit(Antal)),
                 se.PI=sd.PI/sqrt(N)) #Summarize data per site with sd and se for creating error bars
 
-#Rename control sites to english names
 Meantot$newprov = gsub("Helsingborg_kontroll", "Helsingborg_control", Meantot$newprov)
 Meantot$newprov = gsub("Motala_kontroll", "Motala_control", Meantot$newprov)
 Meantot$newprov = gsub("Vellinge_kontroll", "Vellinge_control", Meantot$newprov)
@@ -202,7 +199,7 @@ ggplot(Meantot, aes(x=reorder(Meantot$newprov, Meantot$order), y=Meantot$mean_to
                                    hjust = 1, color = "black")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
-ggsave("Mean_cells_PI_plot.png", plot = last_plot(), device = "png",
+ggsave("Celler_PI_plot.png", plot = last_plot(), device = "png",
        scale = 1, width = 12, height = 8,
        dpi = 600)
 
@@ -215,6 +212,7 @@ SampleMeans <- ddply(dataPI_sub,"Prov", summarize, N=length(Antal),
                      se.PI=sd.PI/sqrt(N)) #Create summarize of number of cells per sample with means, sd and se.
 str(SampleMeans)
 SampleMeans$Prov = as.character(SampleMeans$Prov)
+
 
 SampleMeans$newprov <- substr(SampleMeans$Prov, 1, nchar(SampleMeans$Prov) - 2)#New column of sites without ID
 
@@ -243,10 +241,10 @@ ggplot(Meantot, aes(x=reorder(newprov, order), y=mean_sample)) +
         plot.title = element_text (hjust = 0.5),
         text = element_text(size=28, family= "Times"),
         axis.text.x = element_text(size = 20, angle = 60,
-                                   hjust = 1, color = "black")) +
+                                   hjust = 1, color = "grey1")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
-ggsave("CellsPI_sample_plot.png", plot = last_plot(), device = "png",
+ggsave("CellerPI_prov_boxplot.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
 
@@ -267,6 +265,7 @@ hist(datHW$Antal)#Visualize HW data
 m9 = glm.nb(Antal ~ 1, data=datHW) #Fit model to HW data
 summary(m9)
 
+#Bad model fit
 
 library(performance)
 r2(m7)
@@ -275,24 +274,30 @@ r2(m7)
 m10 = glmmTMB(Antal ~ 1 + (1|Lokal), family="nbinom1", data=datC)
 summary(m10)
 r2(m10) #Conditional takes fixed and random effects into account. Marginal only fixed
-
+#Conditional R2: 0.815 mu of 0.0 is too close to zero, estimate of random effect variances may
+#be unreliable. 
 
 #Variance explained by sites for HW samples
 m11 = glmmTMB(Antal ~ 1 + (1|Lokal), family="nbinom1", data=datHW)
 summary(m11)
 r2(m11)
 #High variance within data not the same as R^2 which shows how much of that variance that the model explains
+#Conditional R2: 0.327 mu of 0.3 is too close to zero, estimate of random effect variances may
+#be unreliable
 
 #Variance explained by samples within sites for control samples
 m12 = glmmTMB(Antal ~ 1 + (1|Lokal/Prov), family="nbinom1", data=datC)
 summary(m12)
 r2(m12)
+#mu of 0.3 is too close to zero, estimate of random effect variances may
+#be unreliable
 
 #Variance explained by samples within sites for HW samples
 m13 = glmmTMB(Antal ~ 1 + (1|Lokal/Prov), family="nbinom1", data=datHW)
 summary(m13)
 r2(m13)
-#My estimates for variance are unreliable because the data is too close to 0
+#mu of 0.3 is too close to zero, estimate of random effect variances may
+#be unreliable
 
 #Plotting treatment difference####
 
@@ -302,7 +307,7 @@ ggplot(dataPI_sub, aes(x=Behandling, y=Antal, fill=Behandling)) +
   geom_boxplot() +
   scale_fill_grey() +
   theme_classic() + 
-  scale_y_continuous(limits = c(0,200), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,160), expand = c(0,0)) +
   labs(y="Number of dead cells", x="", 
        title = "") +
   theme(legend.position = c(0.9,0.9), 
@@ -313,71 +318,69 @@ ggplot(dataPI_sub, aes(x=Behandling, y=Antal, fill=Behandling)) +
                                    hjust = 0.5, color = "black")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
-ggsave("Treatment_PI_boxplot.png", plot = last_plot(), device = "png",
+ggsave("Behandling_PI_boxplot.png", plot = last_plot(), device = "png",
        scale = 1, width = 13, height = 8,
        dpi = 600)
 
 #Difference between municipalities####
 
-#Set order of municipalities
-datHW$Kommun = factor(datHW$Kommun, levels=c("Vellinge", "Göteborg", "Helsingborg", "Motala"))
-
 plot(datHW$Antal ~ datHW$Kommun, las=1) #visualize data
 
 mm = glm.nb(Antal ~ Kommun, data=datHW) #Fit model for number of cells per micrograph
 anova(mm)
-summary(mm) #Sig dif between GB, HB and Vellinge but not between Vellinge and Motala
+summary(mm) #Bad fit
 
 mm1 = glm.nb(Antal ~ Kommun-1, data=datHW)
-summary(mm1)
+summary(mm1) #Bad fit
 
-coef2 = summary(mm)$coef
-exp(coef2[1,1]) #[1] 0.2840237 mean Vellinge
-exp(coef2[2,1]) #[1] 7.055474 mean Gothenburg
-exp(coef2[3,1]) #[1] 5.82589 mean Helsingborg
-exp(coef2[4,1]) #[1] 0.9714246 mean Motala
+coef2 = summary(mm1)$coef
+exp(coef2[1,1]) #24.69804 mean Gothenburg
+exp(coef2[2,1]) #21.44664 mean Helsingborg
+exp(coef2[3,1]) #23.43799 mean Motala
+exp(coef2[4,1]) #4.520792 mean Vellinge
 
-#Take site and sample into account
+datHW$Kommun = factor(datHW$Kommun, levels=c("Vellinge", "Göteborg", "Helsingborg", "Motala"))
 
 mm = glmmTMB(Antal ~ Kommun + (1|Lokal/Prov), family="nbinom1", datHW)
 summary(mm) #Fit model where site and sample are random factors
-#No difference.
+#No sig dif.
 
-plot(Antal ~ Kommun, data=datC)
 mm2 = glmmTMB(Antal ~ Kommun + (1|Lokal/Prov), family="nbinom1", datC)
-summary(mm2) #Model difference between municipalities in control site
-#Doesn't work, only 1 group with values other than 0
+summary(mm2) #Model difference between municipalities in control site, NA produced
 
 boxplot(resid(mm) ~ datHW$Kommun)
 
-coef3 = summary(mm)
-coef3 = coef3[["coefficients"]][["cond"]] # Mean cells per micrograph, log scale
-exp(coef3[1,1]) # [1] 0.09597268 mean V
-exp(coef3[1,1] + coef3[2,1]) # [1] 0.7730085 mean G
-exp(coef3[1,1] + coef3[3,1]) # [1] 0.40313 mean H
-exp(coef3[1,1] + coef3[4,1]) # [1] 0.05495027 mean M
+coef4 = summary(mm)
+coef4 = coef4[["coefficients"]][["cond"]] # Mean cells per micrograph, log scale
+exp(coef4[1,1]) # [1] 0.09597268 mean V
+exp(coef4[1,1] + coef4[2,1]) # [1] 0.7730085 mean G
+exp(coef4[1,1] + coef4[3,1]) # [1] 0.40313 mean H
+exp(coef4[1,1] + coef4[4,1]) # [1] 0.05495027 mean M
 
-exp(coef3[1,2]) # [1] 2.088992 SE V
-exp(coef3[1,2] + coef3[2,2]) # [1] 6.328839 SE G
-exp(coef3[1,2] + coef3[3,2]) # [1] 5.350443 SE H
-exp(coef3[1,2] + coef3[4,2]) # [1] 4.777567 SE M
+exp(coef4[1,2]) # [1] 2.088992 SE V
+exp(coef4[1,2] + coef4[2,2]) # [1] 6.328839 SE G
+exp(coef4[1,2] + coef4[3,2]) # [1] 5.350443 SE H
+exp(coef4[1,2] + coef4[4,2]) # [1] 4.777567 SE M
 
-#Add municipalities to mean df
+
+#Sample modelling
 Meantot$Kommun = c("Helsingborg", "Helsingborg", "Helsingborg", "Göteborg",
                    "Motala","Motala","Motala","Motala","Motala","Motala",
                    "Motala", "Vellinge","Vellinge","Vellinge")
-
-#Remove controls
 meantot_sub = subset(Meantot, Meantot$newprov != "Helsingborg_control" & Meantot$newprov != "Motala_control" & Meantot$newprov != "Vellinge_control")
-meantot_sub$Kommun = as.factor(meantot_sub$Kommun) #Set municipality as factor
+meantot_sub$Kommun = as.factor(meantot_sub$Kommun)
 str(meantot_sub)
 
-meantot_sub$Kommun = factor(meantot_sub$Kommun, levels=c("Vellinge", "Göteborg", "Helsingborg", "Motala")) #Set plotting order
+meantot_sub$Kommun = factor(meantot_sub$Kommun, levels=c("Vellinge", "Göteborg", "Helsingborg", "Motala"))
 
-#Unnecessary? sample modelling
+
 hist(meantot_sub$mean_sample)
-meantot_sub$logsample = log(meantot_sub$mean_sample)
+meantot_sub$logsample = log(meantot_sub$mean_sample) #Try to log samples to get normal distribution, still not great
 hist(meantot_sub$logsample)
+
+meantot_sub[meantot_sub == -Inf] = NA
+
+meantot_sub = na.omit(meantot_sub)
 
 mm2 = lm(logsample ~ Kommun, data=meantot_sub) #Fit model to log data 
 summary(mm2) 
@@ -396,6 +399,14 @@ exp(coef3[2,2]) # [1] 4.641823 SE G
 exp(coef3[3,2]) # [1] 2.960874 SE H
 exp(coef3[4,2]) # [1] 1.871434 SE M
 
+meantot_sub = subset(Meantot, Meantot$newprov != "Helsingborg_control" & Meantot$newprov != "Motala_control" & Meantot$newprov != "Vellinge_control")
+meantot_sub$Kommun = as.factor(meantot_sub$Kommun)
+kruskal.test(mean_sample ~ Kommun, data=meantot_sub)
+
+kommunmeans <- ddply(meantot_sub,"Kommun", summarize, N=length(mean_sample),
+                     mean = mean(na.omit(mean_sample)),
+                     sd.PI = sd(na.omit(mean_sample)),
+                     se.PI = sd.PI/sqrt(N))
 
 #Plotting municipalities sample####
 
@@ -416,13 +427,12 @@ ggplot(meantot_sub, aes(x=Kommun, y=mean_sample, fill=Kommun)) +
                                    hjust = 0.5, color = "black")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
-ggsave("PI_Kommun_prov_boxplot.png", plot = last_plot(), device = "png",
+ggsave("KommunPI_prov_boxplot.png", plot = last_plot(), device = "png",
        scale = 1, width = 13, height = 8,
        dpi = 600)
 
 #Plotting municipalities micrograph
 
-#Change name of municipalities to english
 meantot_sub$Kommun = gsub("Göteborg","Gothenburg", meantot_sub$Kommun)
 meantot_sub$Kommun = factor(meantot_sub$Kommun, levels=c("Vellinge", "Gothenburg", "Helsingborg", "Motala"))
 
@@ -431,8 +441,8 @@ ggplot(meantot_sub, aes(x=Kommun, y=mean_tot, fill=Kommun)) +
   geom_boxplot() +
   scale_fill_grey() +
   theme_classic() + 
-  scale_y_continuous(limits = c(0,10), expand = c(0,0)) +
-  labs(y="Number of dead cells", x="", 
+  scale_y_continuous(limits = c(0,5), expand = c(0,0)) +
+  labs(y="Number of cells", x="", 
        title = "") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),
@@ -462,33 +472,42 @@ hist(HW_str$Antal)
 
 mod1 = glm.nb(Antal ~ Struktur, data=HW_str)
 anova(mod1)
-summary(mod1) # sig dif betweeen structures, vt fewest cells, pith most
-
+summary(mod1) # sig dif betweeen structures, vt fewest cells, pith most, not great model fit
 
 coef5 = summary(mod1)$coef
 
-exp(coef5[1,1]) # [1] 0.8013621 mean cortex
-exp(coef5[2,1] + coef5[1,1]) # [1] 2.276029 mean pith
-exp(coef5[3,1] + coef5[1,1]) # [1] 0.1378378 mean vt
+exp(coef5[1,1]) # [1] 28.75203 mean cortex
+exp(coef5[2,1] + coef5[1,1]) # [1] 43.55789 mean pith
+exp(coef5[3,1] + coef5[1,1]) # [1] 0.2593235 mean vt
 
-exp(coef5[1,2]) # [1] 1.265811 SE cortex
-exp(coef5[2,2] + coef5[1,2]) # [1] 1.916672 SE pith
-exp(coef5[3,2] + coef5[1,2]) # [1] 1.716296 SE vt
+exp(coef5[1,2]) # [1] 1.086046 SE cortex
+exp(coef5[2,2] + coef5[1,2]) # [1] 1.287328 SE pith
+exp(coef5[3,2] + coef5[1,2]) # [1] 1.239278 SE vt
 
-#take site and sample into account
 mod2 = glmmTMB(Antal ~ Struktur + (1|Lokal/Prov), family="nbinom1", data=HW_str)
-summary(mod2) #sig dif between str, 
+summary(mod2) #sig dif between str, takes site and sample into account
 
 coef6 = summary(mod2)$coef
 coef6 = coef6[["cond"]]
 
 exp(coef6[1,1]) # [1] 0.1436847 mean cortex
-exp(coef6[1,1] + coef6[2,1]) # [1] 0.2765676
-exp(coef6[1,1] + coef6[3,1]) # [1] 0.02647525
+exp(coef6[1,1] + coef6[2,1]) # [1] 0.2765676 mean pith
+exp(coef6[1,1] + coef6[3,1]) # [1] 0.02647525 mean vt
 
 exp(coef6[1,2]) #[1] 1.723259 SE cortex
 exp(coef6[1,2] + coef6[2,2]) # [1] 2.052546 SE pith
 exp(coef6[1,2] + coef6[3,2]) #[1] 2.199552 SE vt
+
+#Means don't make sense should be 20 to 80 something per micrograph
+
+kruskal.test(Antal ~ Struktur, data=HW_str)
+#Kruskal-Wallis chi-squared = 148.81, df = 2, p-value < 2.2e-16
+#sig dif between str
+
+str_means = ddply(HW_str, "Struktur", summarize, 
+                  mean = mean(Antal),
+                  sd = sd(Antal),
+                  se = sd /sqrt(length(Antal)))
 
 #Plotting str####
 
@@ -498,7 +517,7 @@ ggplot(HW_str, aes(x=Struktur, y=Antal, fill=Struktur)) +
   geom_boxplot() +
   scale_fill_grey() +
   theme_classic() + 
-  scale_y_continuous(limits = c(0,200), expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,160), expand = c(0,0)) +
   labs(y="Number of cells", x="", 
        title = "") +
   theme(legend.position = c(0.9,0.9), 
@@ -509,7 +528,7 @@ ggplot(HW_str, aes(x=Struktur, y=Antal, fill=Struktur)) +
                                    hjust = 0.5, color = "black")) +
   theme(axis.ticks.length=unit(.25, "cm"))
 
-ggsave("STR__PI_boxplot.png", plot = last_plot(), device = "png",
+ggsave("STR_boxplot_PI.png", plot = last_plot(), device = "png",
        scale = 1, width = 13, height = 8,
        dpi = 600)
 
@@ -519,7 +538,6 @@ ggsave("STR__PI_boxplot.png", plot = last_plot(), device = "png",
 data = dataPI_sub 
 
 data = subset(dataPI_sub, dataPI_sub$Struktur!="pith, cortex")
-#Why is "pith, cortex" still included in graphs and tapply?
 
 data$Struktur = as.factor(data$Struktur)
 data$Behandling = as.factor(data$Behandling)
@@ -539,36 +557,38 @@ se = na.omit(se)
 
 colMeans(means)
 #Control  Heatweed 
-#0.2232044 1.0717430 
+#0.2232044 1.0717430  
 
 rowMeans(means)
-#      cortex            pith vascular tissue 
+#  cortex            pith vascular tissue 
 #0.57902499      1.29447711      0.06891892 
 
 colMeans(se)
-#  Control  Heatweed 
-#0.1024732 0.2340615  
+# Control  Heatweed 
+# 0.1024732 0.2340615
 
 rowMeans(se)
-#       cortex            pith vascular tissue 
+#   cortex          pith   vascular tissue 
 #0.16939395      0.31242267      0.02298541 
 
-#model fitting
-mod3 = glm.nb(Antal ~ Behandling*Struktur, data=data)
-anova(mod3)
-summary(mod3)
+#mann whitney U compare seperatly
 
-mod4 = glm.nb(Antal ~ Behandling*Struktur -1, data=data)
-anova(mod4)
-summary(mod4) #?? HELP what happened to cortex?
+d = subset(data, data$Struktur =="cortex")
+mu = wilcox.test(d$Antal ~ d$Behandling)
+mu #W = 134674, p-value = 0.1176
 
-data$log = log(data$Antal +1) #Try to get normal data for 2-way anova
-hist(data$log) #Still not normal
-model = aov(log ~ Behandling*Struktur, data=data)
-summary(model) #Gives sig. but not really allowed to use this test
+d = subset(data, data$Struktur =="pith")
+mu = wilcox.test(d$Antal ~ d$Behandling)
+mu # W = 25980, p-value = 1.148e-05
 
-model2 = glmmTMB(log ~ Behandling*Struktur + (1|Lokal), data=data)
-summary(model2)
+d = subset(data, data$Struktur =="vascular tissue")
+mu = wilcox.test(d$Antal ~ d$Behandling)
+mu # W = 218978, p-value = 0.02322
+
+mu_treat = wilcox.test(data$Antal ~ data$Behandling)
+mu_treat # W = 1022082, p-value = 0.0002905
+summary(mu_treat)
+
 
 #Plotting
 
@@ -591,10 +611,9 @@ data %>%
         legend.title = element_text("Times"),
         axis.text.x = element_text(size = 28, color = "black"))
 
-ggsave("str_treat_interaction_PI.png", plot = last_plot(), device = "png",
+ggsave("str_treat_interaction.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
-
 
 
 
