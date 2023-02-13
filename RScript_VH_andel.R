@@ -156,4 +156,26 @@ ggsave("VH_Kommun.png", plot = last_plot(), device = "png",
        scale = 1, width = 13, height = 8,
        dpi = 600)
 
+#Fixing greenhouse live samples plot
 
+VH_sub$Plats = gsub("Helsingborg control","Control Helsingborg", VH_sub$Plats)
+VH_sub$Plats = gsub("Vellinge control","Control Vellinge", VH_sub$Plats)
+VH_sub$Plats = gsub("Motala control","Control Motala", VH_sub$Plats)
+
+ggplot(VH_sub, aes(x=reorder(Plats, Grupp), y=Procent.levande)) +
+  geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
+  theme_classic() + 
+  scale_y_continuous(limits = c(0,110), expand = c(0,0)) +
+  labs(y="Proportion of shoots emerged (%)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 20, angle = 60,
+                                   hjust = 1, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "cm"))
+
+ggsave("VH_live.png", plot = last_plot(), device = "png",
+       scale = 1, width = 10, height = 8,
+       dpi = 600)
