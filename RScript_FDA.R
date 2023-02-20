@@ -227,6 +227,11 @@ Meantot$mean_sample = Sample$V1
 Meantot$sd = Sample$V2
 Meantot$se = Sample$V3
 
+#Changing names of control samples
+Meantot$newprov = gsub("Helsingborg_control","Control Helsingborg", Meantot$newprov)
+Meantot$newprov = gsub("Motala_control","Control Motala", Meantot$newprov)
+Meantot$newprov = gsub("Vellinge_control","Control Vellinge", Meantot$newprov)
+
 ggplot(Meantot, aes(x=reorder(newprov, order), y=mean_sample)) +
   geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
   geom_errorbar(data=Meantot, aes(ymin= mean_sample - se, 
@@ -235,7 +240,7 @@ ggplot(Meantot, aes(x=reorder(newprov, order), y=mean_sample)) +
   theme_classic() + 
   scale_y_continuous(limits = c(0,500), expand = c(0,0)) +
   labs(y="Mean number of cells", x="", 
-       title = "Number of live cells per sample from each site") +
+       title = "") +
   theme(legend.position = c(0.9,0.9), 
         legend.title = element_blank(),
         plot.title = element_text (hjust = 0.5),
