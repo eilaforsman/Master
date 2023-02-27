@@ -69,6 +69,7 @@ summary(m2)
 
 TukeyHSD(m2, "invdat_sub$Behandling", ordered=FALSE, conf.level = 0.95)
 
+
 #Mean number
 library(lme4)
 library(MASS)
