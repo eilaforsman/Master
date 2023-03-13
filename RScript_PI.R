@@ -310,7 +310,7 @@ r2(m13)
 
 #Plotting treatment difference####
 
-plot(dataPI_sub$Antal ~ dataPI_sub$Behandling, las=1)
+dataPI_sub$Behandling = gsub("Heatweed", "Hot water", dataPI_sub$Behandling)
 
 ggplot(dataPI_sub, aes(x=Behandling, y=Antal)) +
   geom_boxplot() +
@@ -597,7 +597,7 @@ data %>%
         legend.title = element_text("Times"),
         axis.text.x = element_text(size = 28, color = "black"))
 
-ggsave("str_treat_interaction.png", plot = last_plot(), device = "png",
+ggsave("str_treat_interaction_PI.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
 
@@ -608,7 +608,7 @@ dat_munH = subset(dataPI_sub, Kommun == "Helsingborg")
 
 hist(dat_munH$Antal, xlab="Number of cells", las=1, main=NULL)
 
-dat_munH$Behandling = factor(dat_munH$Behandling, levels=c("Control", "Heatweed"))
+dat_munH$Behandling = factor(dat_munH$Behandling, levels=c("Control", "Hot water"))
 
 mu_munH = wilcox.test(dat_munH$Antal ~ dat_munH$Behandling)
 mu_munH #W = 55722, p-value = 2.875e-08
@@ -643,7 +643,7 @@ dat_munM = subset(dataPI_sub, Kommun == "Motala")
 
 hist(dat_munM$Antal, xlab="Number of cells", las=1, main=NULL)
 
-dat_munM$Behandling = factor(dat_munM$Behandling, levels=c("Control", "Heatweed"))
+dat_munM$Behandling = factor(dat_munM$Behandling, levels=c("Control", "Hot water"))
 
 mu_munM = wilcox.test(dat_munM$Antal ~ dat_munM$Behandling)
 mu_munM #W = 200739, p-value = 0.0002834
@@ -678,7 +678,7 @@ dat_munV = subset(dataPI_sub, Kommun == "Vellinge")
 
 hist(dat_munV$Antal, xlab="Number of cells", las=1, main=NULL)
 
-dat_munV$Behandling = factor(dat_munV$Behandling, levels=c("Control", "Heatweed"))
+dat_munV$Behandling = factor(dat_munV$Behandling, levels=c("Control", "Hot water"))
 
 mu_munV = wilcox.test(dat_munV$Antal ~ dat_munV$Behandling)
 mu_munV #W = 63597, p-value = 0.007119
