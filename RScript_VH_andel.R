@@ -70,9 +70,9 @@ library(lme4)
 library(lmerTest)
 library(MASS)
 
-VH_sub$Treatment = c("Control","Control","Control","Heatweed","Heatweed",
-                     "Heatweed","Heatweed","Heatweed","Heatweed","Heatweed",
-                     "Heatweed","Heatweed","Heatweed","Heatweed")
+VH_sub$Treatment = c("Control","Control","Control","Hot water","Hot water",
+                     "Hot water","Hot water","Hot water","Hot water","Hot water",
+                     "Hot water","Hot water","Hot water","Hot water")
 
 hist(VH_sub$levande)
 qqnorm(VH_sub$levande)
