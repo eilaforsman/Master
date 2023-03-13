@@ -301,6 +301,7 @@ r2(m13)
 plot(dataFDA_sub$Antal ~ dataFDA_sub$Behandling, las=1)
 
 dataFDA_sub$Behandling = gsub("Kontroll", "Control", dataFDA_sub$Behandling)
+dataFDA_sub$Behandling = gsub("Heatweed", "Hot water", dataFDA_sub$Behandling)
 
 ggplot(dataFDA_sub, aes(x=Behandling, y=Antal, fill=Behandling)) +
   geom_boxplot() +
