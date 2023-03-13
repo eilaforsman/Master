@@ -30,11 +30,12 @@ invdat_sub = subset(invdat, select = -c(Diameter..mm., X.1, X.2, X.3, X.4, Antal
 
 invdat_sub <- invdat_sub[!apply(is.na(invdat_sub) | invdat_sub == "", 1, all),]
 
+invdat_sub$Behandling = gsub("Heatweed", "Hot water", invdat_sub$Behandling)
 str(invdat_sub)
 
 #Data exploration and model fitting####
 
-invdat_sub$Behandling = factor(invdat_sub$Behandling, levels=c("Kontroll", "Klippt", "Heatweed"))
+invdat_sub$Behandling = factor(invdat_sub$Behandling, levels=c("Kontroll", "Klippt", "Hot water"))
 #Change order so Kontroll is intercept
 
 #Height
@@ -101,7 +102,7 @@ hist(invdat_sub$Area)
 invdat_sub$logarea <- log(invdat_sub$Area)
 hist(invdat_sub$logarea)
 
-invdat_sub$Behandling = factor(invdat_sub$Behandling, levels=c("Kontroll", "Klippt", "Heatweed"))
+invdat_sub$Behandling = factor(invdat_sub$Behandling, levels=c("Kontroll", "Klippt", "Hot water"))
 #Change order so kontroll is intercept
 m4 = lm(invdat_sub$logarea~invdat_sub$Behandling) 
 anova(m4)
@@ -251,12 +252,12 @@ ggsave("medelarea.png", plot = last_plot(), device = "png",
 
 #English plots####
 
-invdat_sub$treatment = c("Heatweed","Heatweed","Heatweed","Heatweed",
-                         "Control", "Mowed", "Mowed", "Heatweed",
+invdat_sub$treatment = c("Hot water","Hot water","Hot water","Hot water",
+                         "Control", "Mowed", "Mowed", "Hot water",
                          "Control", "Mowed", "Control", "Mowed",
-                         "Control","Heatweed","Heatweed","Control")
+                         "Control","Hot water","Hot water","Control")
 
-invdat_sub$treatment = factor(invdat_sub$treatment, levels=c("Control", "Mowed", "Heatweed"))
+invdat_sub$treatment = factor(invdat_sub$treatment, levels=c("Control", "Mowed", "Hot water"))
 
 #Mean diameter
 stats <- ddply(invdat_sub,"treatment", summarize, N=length(Medel.diameter),
@@ -414,3 +415,4 @@ ggplot(data = stats, aes(x=treatment, y=mean.area,
 ggsave("meanarea.png", plot = last_plot(), device = "png",
        scale = 1, width = 10, height = 8,
        dpi = 600)
+
